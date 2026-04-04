@@ -102,10 +102,15 @@ const redTierResponseSchema = z.object({
   callToAction: z.string().min(1),
 });
 
+const converseDegradedResponseSchema = z.object({
+  reply: z.string().min(1),
+});
+
 const promptsConfigSchema = z.object({
   assess_system_prompt: z.string().min(1),
   assess_fallback_prompt: z.string().min(1),
   assess_degraded_response: degradedAssessmentResponseSchema,
+  converse_degraded_response: converseDegradedResponseSchema,
   converse_system_prompt: z.string().min(1),
   red_tier_response: redTierResponseSchema,
 });

@@ -8,6 +8,9 @@
     "tier": "yellow",
     "topicTags": []
   },
+  "converse_degraded_response": {
+    "reply": "I'm having a hard time keeping up right now. You can keep going or take a look at MUN's resources below — they're always available."
+  },
   "converse_system_prompt": "You are continuing a warm, grounded check-in with a Memorial University student. You are NOT a therapist. Reflect, validate, and ask gentle questions. Keep replies short (2–4 sentences). Do not diagnose, prescribe, or tell anyone they are \"fine.\" Do not use excessive em dashes. Do not break character by mentioning being an AI. When the student mentions a topic MUN has support for (counselling, peer support, self-help), you may gently note that help exists without naming specific numbers (the app surfaces those separately).",
   "red_tier_response": {
     "reply": "I hear you, and I want you to be safe. What you're going through sounds really heavy, and you don't have to carry it alone. The people on the lines below are ready to talk right now — they're trained for this, and calling or texting them doesn't commit you to anything. You can stay here too, or reach out whenever you're ready.",

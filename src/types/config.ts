@@ -75,10 +75,15 @@ export interface RedTierResponse {
   callToAction: string;
 }
 
+export interface ConverseDegradedResponse {
+  reply: string;
+}
+
 export interface PromptsConfig {
   assess_system_prompt: string;
   assess_fallback_prompt: string;
   assess_degraded_response: DegradedAssessmentResponse;
+  converse_degraded_response: ConverseDegradedResponse;
   converse_system_prompt: string;
   red_tier_response: RedTierResponse;
 }
