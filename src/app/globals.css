@@ -88,6 +88,25 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+/* Tailwind v4's Preflight removes the default cursor:pointer on buttons.
+   Restore it for interactive elements so hover affordance matches user
+   expectation. Disabled controls keep their not-allowed cursor via the
+   :disabled pseudo-class below. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+a {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 /* Headings use Manrope by default */
 h1,
 h2,
@@ -109,6 +128,17 @@ h6 {
   border-radius: inherit;
 }
 
+/* Input focus: slightly tinted background + subtle inset ring.
+   Kept separate from the global focus-visible rule since the inputs use
+   --color-surface-alt as their default background. */
+input:focus-visible,
+textarea:focus-visible {
+  background: var(--color-surface-card);
+  box-shadow:
+    0 0 0 3px var(--color-surface),
+    0 0 0 5px var(--color-primary);
+}
+
 /* Respect prefers-reduced-motion — per design principles, animations are
    intentional, never decorative. */
 @media (prefers-reduced-motion: reduce) {
@@ -126,4 +156,16 @@ h6 {
 ::selection {
   background: var(--color-accent);
   color: var(--color-text-primary);
+}
+
+/* Typing indicator animation used by src/components/chat/TypingIndicator.tsx */
+@keyframes mun-mind-typing {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-3px);
+    opacity: 0.9;
+  }
 }

@@ -94,8 +94,9 @@ function CampusCard({
         "bg-[var(--color-surface-card)] border border-[var(--color-border-strong)]",
         "rounded-[16px] p-6 text-left",
         "flex flex-col gap-2 min-h-[140px]",
-        "transition-colors duration-200",
-        "hover:border-[var(--color-primary)] hover:bg-[var(--color-surface-alt)]"
+        "transition-[background-color,border-color,transform,box-shadow] duration-200 ease-out",
+        "hover:border-[var(--color-primary)] hover:bg-[var(--color-surface-alt)] hover:-translate-y-[2px] hover:shadow-[var(--shadow-sm)]",
+        "active:translate-y-0"
       )}
     >
       {/* Not an <h2> — a heading inside a <button> is invalid HTML. */}

@@ -33,7 +33,7 @@ export function Button({
   ...rest
 }: ButtonProps) {
   const base =
-    "inline-flex items-center justify-center gap-2 font-semibold rounded-[8px] transition-colors duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-60";
+    "inline-flex items-center justify-center gap-2 font-semibold rounded-[8px] transition-[background-color,transform,box-shadow] duration-150 ease-out active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100";
 
   const sizes: Record<Size, string> = {
     md: "px-6 py-3 text-[16px] leading-6 min-h-[48px]",
