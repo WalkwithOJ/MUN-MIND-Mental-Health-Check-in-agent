@@ -1,26 +1,129 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * MUN MIND design tokens.
+ * Extracted from the Figma design system (frame 1:2).
+ * Brand personality: warm but not childish, calm but not clinical, trustworthy and approachable.
+ *
+ * Do NOT add purple gradients, sparkles, or generic AI aesthetic. See docs/anti-vibe-code.md.
+ */
+
+@theme {
+  /* --- Color palette --- */
+  --color-primary: #13423d; /* deep teal — headings, primary CTAs */
+  --color-primary-container: #2d5a54; /* darker teal — hovers on primary */
+  --color-secondary: #42655c; /* sage — body text, secondary labels */
+  --color-secondary-container: #c4ebde; /* light sage — secondary buttons, bot chat bubble */
+  --color-accent: #a1d0c8; /* user chat bubble */
+  --color-accent-light: #bcece4; /* soft highlights */
+
+  --color-surface: #faf9f4; /* warm cream — page background */
+  --color-surface-alt: #f5f4ef; /* soft section background */
+  --color-surface-high: #e9e8e3; /* elevated card */
+  --color-surface-card: #ffffff; /* pure white for cards on surface */
+
+  --color-text-primary: #13423d; /* same as primary — headings */
+  --color-text-body: #404847; /* body copy */
+  --color-text-muted: #42655c; /* labels, secondary */
+  --color-text-placeholder: #5a6a63; /* input placeholders — darkened from #6b7280 to pass WCAG AA on surface-alt */
+  --color-text-on-primary: #ffffff;
+  --color-text-disabled: rgba(27, 28, 25, 0.3);
+
+  --color-border: rgba(192, 200, 198, 0.2);
+  --color-border-strong: #c0c8c6;
+
+  /* Crisis tier — used sparingly; see docs/PRD.md §7. Not alarming red. */
+  --color-crisis: #ba1a1a;
+  --color-crisis-hover: #9f1717;
+
+  /* --- Typography --- */
+  --font-heading: "Manrope", system-ui, -apple-system, sans-serif;
+  --font-body: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* Type scale. Line-heights tuned for editorial readability, not density. */
+  --text-display: 60px;
+  --text-display--line-height: 70px;
+  --text-h1: 36px;
+  --text-h1--line-height: 40px;
+  --text-h2: 24px;
+  --text-h2--line-height: 32px;
+  --text-h3: 18px;
+  --text-h3--line-height: 28px;
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 29.25px;
+  --text-body: 16px;
+  --text-body--line-height: 24px;
+  --text-sm: 14px;
+  --text-sm--line-height: 20px;
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-caption: 10px;
+  --text-caption--line-height: 15px;
+
+  /* --- Spacing (4px base, per Figma) --- */
+  --spacing: 4px;
+
+  /* --- Radii ---
+     Two structural radii (8 and 16) plus one pill radius for badges/chips.
+     The pill is a deliberate exception documented in docs/anti-vibe-code.md
+     — it is used only for non-structural tag/label elements and never for
+     containment or interactive surfaces. */
+  --radius-sm: 8px; /* buttons, inputs, small surfaces */
+  --radius-md: 16px; /* cards, modals, containment elements */
+  --radius-pill: 9999px; /* badges, chips only — not for cards or buttons */
+
+  /* --- Shadows — subtle only, no glow effects --- */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* --- Base styles --- */
+html,
+body {
+  background: var(--color-surface);
+  color: var(--color-text-body);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Headings use Manrope by default */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* Visible focus ring — WCAG compliance and accessibility-first design */
+:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px var(--color-surface),
+    0 0 0 5px var(--color-primary);
+  border-radius: inherit;
+}
+
+/* Respect prefers-reduced-motion — per design principles, animations are
+   intentional, never decorative. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Selection color uses the brand */
+::selection {
+  background: var(--color-accent);
+  color: var(--color-text-primary);
 }

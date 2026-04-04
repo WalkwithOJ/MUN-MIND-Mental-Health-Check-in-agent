@@ -14,7 +14,7 @@
 
 ## Layout & Components
 - Identical component placement across pages
-- Consistent border radius values (define 2-3 max)
+- **Exactly 2 structural border radii** — 8px (buttons, inputs, small surfaces) and 16px (cards, modals, containment). Plus one pill radius (9999px) reserved for badges/chips only. No other values.
 - Subtle hover states (2-4px lift max)
 - Proportional icon sizing relative to text
 - Remove non-functional social icons
