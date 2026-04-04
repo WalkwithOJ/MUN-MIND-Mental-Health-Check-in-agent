@@ -26,8 +26,13 @@ const NAV_LINKS: NavLink[] = [
  * - Nav: Home / Our Mission / Resources (active link has a primary underline)
  * - Get Help: always-visible crisis CTA (44px touch target)
  */
+// Gated on NODE_ENV rather than a runtime feature flag so the link is tree-shaken
+// out of production builds entirely. Next.js inlines process.env.NODE_ENV at build time.
+const IS_DEV = process.env.NODE_ENV !== "production";
+
 export function AppHeader() {
   const pathname = usePathname();
+  const showResetLink = IS_DEV && pathname.startsWith("/chat");
 
   return (
     <header className="w-full bg-[rgba(250,249,244,0.8)] backdrop-blur-xl sticky top-0 z-40 border-b border-[var(--color-border)]">
@@ -76,13 +81,24 @@ export function AppHeader() {
           })}
         </nav>
 
-        <Link
-          href="/resources"
-          className="inline-flex items-center gap-2 min-h-[44px] px-5 py-2.5 rounded-[8px] bg-[var(--color-primary)] text-white text-[14px] font-semibold shadow-[var(--shadow-sm)] hover:bg-[var(--color-primary-container)] transition-colors"
-        >
-          <Icon name="emergency" className="text-[18px]" />
-          Get Help
-        </Link>
+        <div className="flex items-center gap-3">
+          {showResetLink && (
+            <Link
+              href="/reset"
+              className="inline-flex items-center min-h-[44px] px-3 text-[12px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-primary)] underline"
+              title="Dev only — clears onboarding and restarts the flow"
+            >
+              Reset
+            </Link>
+          )}
+          <Link
+            href="/resources"
+            className="inline-flex items-center gap-2 min-h-[44px] px-5 py-2.5 rounded-[8px] bg-[var(--color-primary)] text-white text-[14px] font-semibold shadow-[var(--shadow-sm)] hover:bg-[var(--color-primary-container)] transition-colors"
+          >
+            <Icon name="emergency" className="text-[18px]" />
+            Get Help
+          </Link>
+        </div>
       </div>
     </header>
   );

@@ -65,12 +65,13 @@
   --spacing: 4px;
 
   /* --- Radii ---
-     Two structural radii (8 and 16) plus one pill radius for badges/chips.
-     The pill is a deliberate exception documented in docs/anti-vibe-code.md
-     — it is used only for non-structural tag/label elements and never for
-     containment or interactive surfaces. */
+     Three structural radii (8, 12, 16) plus one pill radius for badges/chips.
+     Matches the Stitch design system. The pill is used only for
+     non-structural tag/label elements and never for containment surfaces.
+     See docs/anti-vibe-code.md. */
   --radius-sm: 8px; /* buttons, inputs, small surfaces */
-  --radius-md: 16px; /* cards, modals, containment elements */
+  --radius-lg: 12px; /* content cards (trust grid, resource cards) */
+  --radius-md: 16px; /* modals, large containment elements */
   --radius-pill: 9999px; /* badges, chips only — not for cards or buttons */
 
   /* --- Shadows — subtle only, no glow effects --- */
