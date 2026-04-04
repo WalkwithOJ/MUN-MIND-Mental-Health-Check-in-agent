@@ -26,27 +26,22 @@ import { detectCrisis } from "@/lib/crisis-detector";
 import { getResourcesForTier } from "@/lib/escalation";
 import { routeAssess } from "@/lib/llm";
 import { createSession, insertMoodEntry } from "@/lib/supabase";
-import {
-  campusIdSchema,
-  jsonError,
-  logApiEvent,
-  parseJsonBody,
-} from "@/lib/api/http";
+import { jsonError, logApiEvent, parseJsonBody } from "@/lib/api/http";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_MESSAGE_LEN = 4000;
 
+// Campus is NEVER accepted here — it's a quasi-identifier and stays client-side.
 const requestSchema = z.object({
   message: z.string().min(1).max(MAX_MESSAGE_LEN),
-  campus: campusIdSchema,
 });
 
 export async function POST(req: NextRequest) {
   const parsed = await parseJsonBody(req, requestSchema);
   if (!parsed.ok) return parsed.response;
-  const { message, campus } = parsed.data;
+  const { message } = parsed.data;
 
   // 1. Crisis detection runs FIRST, always. No LLM call if Red.
   const detectedTier = detectCrisis(message);
@@ -66,7 +61,7 @@ export async function POST(req: NextRequest) {
       tier: "red" as const,
       moodScore: null,
       reply: promptsConfig.red_tier_response.reply,
-      resources: getResourcesForTier("red", campus),
+      resources: getResourcesForTier("red"),
       deterministic: true,
     });
   }
@@ -82,7 +77,7 @@ export async function POST(req: NextRequest) {
       event: "error",
       errorCode: "db_session_create_failed",
     });
-    return jsonError(503, "Could not start session", { campus });
+    return jsonError(503, "Could not start session");
   }
 
   let assessment: Awaited<ReturnType<typeof routeAssess>>;
@@ -97,7 +92,7 @@ export async function POST(req: NextRequest) {
       event: "error",
       errorCode: "llm_unexpected_throw",
     });
-    return jsonError(503, "Service unavailable", { campus });
+    return jsonError(503, "Service unavailable");
   }
 
   // 3. Persist mood only if non-null (degraded path returns null and we
@@ -127,7 +122,7 @@ export async function POST(req: NextRequest) {
     moodScore: assessment.moodScore,
     reply: assessment.reply,
     topicTags: assessment.topicTags,
-    resources: getResourcesForTier(assessment.tier, campus),
+    resources: getResourcesForTier(assessment.tier),
     degraded: assessment.degraded,
   });
 }

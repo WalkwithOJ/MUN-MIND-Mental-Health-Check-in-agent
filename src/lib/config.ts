@@ -158,9 +158,11 @@ const copyConfigSchema = z.object({
   }),
   privacy: z.object({
     modalHeading: z.string().min(1),
+    bodyText: z.string().min(1),
     points: z.array(z.string().min(1)).min(1),
     ackCheckbox: z.string().min(1),
     ackButton: z.string().min(1),
+    cancelButton: z.string().min(1),
   }),
   campusSelector: z.object({
     heading: z.string().min(1),

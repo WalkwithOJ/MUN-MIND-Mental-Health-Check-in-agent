@@ -31,6 +31,7 @@
   },
   "privacy": {
     "modalHeading": "Before we begin",
+    "bodyText": "At MUN MIND, your privacy isn't a policy — it's the foundation of this space. We want you to feel safe sharing what's on your mind.",
     "points": [
       "No account needed. There's nothing to sign up for.",
       "Your conversation isn't saved after you close this tab.",
@@ -40,7 +41,8 @@
       "If you're in crisis, we'll show you real support resources right away."
     ],
     "ackCheckbox": "I understand this is not counselling or therapy.",
-    "ackButton": "I understand — let's go"
+    "ackButton": "I understand — let's go",
+    "cancelButton": "Cancel"
   },
   "campusSelector": {
     "heading": "Which campus are you on?",

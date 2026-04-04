@@ -23,12 +23,7 @@ import { promptsConfig } from "@/lib/config";
 import { detectCrisis } from "@/lib/crisis-detector";
 import { getResourcesForTier } from "@/lib/escalation";
 import { routeConverse, MAX_HISTORY_MESSAGES } from "@/lib/llm";
-import {
-  campusIdSchema,
-  jsonError,
-  logApiEvent,
-  parseJsonBody,
-} from "@/lib/api/http";
+import { jsonError, logApiEvent, parseJsonBody } from "@/lib/api/http";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,10 +36,10 @@ const messageSchema = z.object({
   content: z.string().min(1).max(MAX_MESSAGE_LEN),
 });
 
+// Campus is NEVER accepted here — it's a quasi-identifier and stays client-side.
 const requestSchema = z.object({
   message: z.string().min(1).max(MAX_MESSAGE_LEN),
   history: z.array(messageSchema).max(MAX_HISTORY_LEN_TRANSPORT),
-  campus: campusIdSchema,
   /**
    * Current session tier from the client. The converse turn doesn't re-assess
    * — it echoes the session's existing tier back so the client keeps the
@@ -58,7 +53,7 @@ const requestSchema = z.object({
 export async function POST(req: NextRequest) {
   const parsed = await parseJsonBody(req, requestSchema);
   if (!parsed.ok) return parsed.response;
-  const { message, history, campus, sessionTier } = parsed.data;
+  const { message, history, sessionTier } = parsed.data;
 
   // 1. Crisis detection BEFORE any LLM call
   const detectedTier = detectCrisis(message);
@@ -72,7 +67,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       tier: "red" as const,
       reply: promptsConfig.red_tier_response.reply,
-      resources: getResourcesForTier("red", campus),
+      resources: getResourcesForTier("red"),
       deterministic: true,
     });
   }
@@ -90,7 +85,7 @@ export async function POST(req: NextRequest) {
       event: "error",
       errorCode: "llm_unexpected_throw",
     });
-    return jsonError(503, "Service unavailable", { campus });
+    return jsonError(503, "Service unavailable");
   }
 
   logApiEvent({
@@ -103,7 +98,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     tier: sessionTier,
     reply: result.reply,
-    resources: getResourcesForTier(sessionTier, campus),
+    resources: getResourcesForTier(sessionTier),
     degraded: result.degraded,
   });
 }

@@ -13,7 +13,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getResourcesForTier, type CampusId } from "@/lib/escalation";
+import { getResourcesForTier } from "@/lib/escalation";
 import type { CrisisTier } from "@/lib/crisis-detector";
 
 /**
@@ -47,16 +47,15 @@ export async function parseJsonBody<T>(
 /**
  * Build an error response that includes fallback crisis resources, so the
  * UI can always show help lines even when the backend fails.
+ *
+ * Campus filtering happens client-side (sessionStorage only) — the server
+ * never sees the student's campus selection, per docs/research-brief.md §4.3.
  */
-export function jsonError(
-  status: number,
-  message: string,
-  opts: { campus?: CampusId } = {}
-): NextResponse {
+export function jsonError(status: number, message: string): NextResponse {
   return NextResponse.json(
     {
       error: message,
-      fallbackResources: getResourcesForTier("red", opts.campus),
+      fallbackResources: getResourcesForTier("red"),
     },
     { status }
   );
@@ -76,7 +75,6 @@ export function logApiEvent(event: {
   console.info("[api]", JSON.stringify(event));
 }
 
-/** Campus ID schema for request validation. Values must match campuses.json. */
-export const campusIdSchema = z
-  .enum(["st_johns", "grenfell", "marine", "any"])
-  .optional();
+// Campus is never accepted in API request bodies. It is a quasi-identifier
+// (see docs/research-brief.md §4.3) and stays in client-side sessionStorage
+// only. Clients filter resource lists locally before rendering.

@@ -131,9 +131,11 @@ export interface CopyConfig {
   };
   privacy: {
     modalHeading: string;
+    bodyText: string;
     points: string[];
     ackCheckbox: string;
     ackButton: string;
+    cancelButton: string;
   };
   campusSelector: {
     heading: string;
