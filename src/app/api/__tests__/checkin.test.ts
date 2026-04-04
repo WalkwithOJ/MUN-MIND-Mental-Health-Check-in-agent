@@ -192,15 +192,27 @@ describe("POST /api/checkin — validation", () => {
   });
 });
 
-describe("POST /api/checkin — DB failure", () => {
-  it("returns 503 with fallback resources when session creation fails", async () => {
+describe("POST /api/checkin — DB failure (graceful degradation)", () => {
+  it("still calls the LLM and returns 200 when createSession fails (sessionId=null)", async () => {
     createSessionMock.mockRejectedValue(new Error("db down"));
+    routeAssessMock.mockResolvedValue({
+      tier: "yellow",
+      moodScore: 3,
+      reply: "I hear you",
+      topicTags: [],
+      degraded: false,
+    });
+
     const res = await POST(
       buildRequest({ message: "just need to vent" }) as never
     );
-    expect(res.status).toBe(503);
+    expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.fallbackResources.length).toBeGreaterThan(0);
+    // Student still gets a real reply — not degraded to crisis fallback
+    expect(json.reply).toBe("I hear you");
+    expect(json.sessionId).toBeNull();
+    // And no mood insert was attempted (no session to correlate with)
+    expect(insertMoodEntryMock).not.toHaveBeenCalled();
   });
 
   it("returns success even if mood insert fails (telemetry-only failure)", async () => {

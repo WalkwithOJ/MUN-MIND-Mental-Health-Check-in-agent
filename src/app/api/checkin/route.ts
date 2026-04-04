@@ -66,18 +66,21 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // 2. Non-red: create an anonymous session row, then call the LLM router.
-  let sessionId: string;
+  // 2. Non-red: try to create an anonymous session row. Supabase failures
+  //    (missing env vars, network issue, RLS misconfig) MUST NOT block the
+  //    LLM call — a student in distress needs a response even when telemetry
+  //    is broken. We proceed with sessionId=null and skip downstream writes.
+  let sessionId: string | null = null;
   try {
     sessionId = await createSession();
   } catch {
     logApiEvent({
       route: "checkin",
-      status: 503,
+      status: 200,
       event: "error",
       errorCode: "db_session_create_failed",
     });
-    return jsonError(503, "Could not start session");
+    // Fall through — sessionId stays null, LLM still runs, mood insert skipped.
   }
 
   let assessment: Awaited<ReturnType<typeof routeAssess>>;
@@ -95,18 +98,20 @@ export async function POST(req: NextRequest) {
     return jsonError(503, "Service unavailable");
   }
 
-  // 3. Persist mood only if non-null (degraded path returns null and we
-  //    don't want to corrupt analytics with fabricated scores).
-  try {
-    await insertMoodEntry(sessionId, assessment.moodScore);
-  } catch {
-    // Don't fail the whole request on a telemetry write — log and continue.
-    logApiEvent({
-      route: "checkin",
-      status: 200,
-      event: "error",
-      errorCode: "db_mood_insert_failed",
-    });
+  // 3. Persist mood only if we have a session AND a real score (degraded
+  //    path returns null and we don't want to corrupt analytics with
+  //    fabricated scores).
+  if (sessionId) {
+    try {
+      await insertMoodEntry(sessionId, assessment.moodScore);
+    } catch {
+      logApiEvent({
+        route: "checkin",
+        status: 200,
+        event: "error",
+        errorCode: "db_mood_insert_failed",
+      });
+    }
   }
 
   logApiEvent({
