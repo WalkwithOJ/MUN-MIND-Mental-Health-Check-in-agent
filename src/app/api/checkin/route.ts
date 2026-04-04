@@ -121,13 +121,21 @@ export async function POST(req: NextRequest) {
     event: assessment.degraded ? "degraded" : "ok",
   });
 
+  // Only attach resources when genuinely helpful. Showing counselling + crisis
+  // lines to a student who said "I feel glad" nags them and undermines trust.
+  // - Green: no resources attached (the student is fine; a reply is enough)
+  // - Yellow: attach yellow-tier resources (counselling + peer support)
+  // - Red path doesn't reach this branch (handled deterministically above)
+  const resources =
+    assessment.tier === "yellow" ? getResourcesForTier("yellow") : [];
+
   return NextResponse.json({
     sessionId,
     tier: assessment.tier,
     moodScore: assessment.moodScore,
     reply: assessment.reply,
     topicTags: assessment.topicTags,
-    resources: getResourcesForTier(assessment.tier),
+    resources,
     degraded: assessment.degraded,
   });
 }

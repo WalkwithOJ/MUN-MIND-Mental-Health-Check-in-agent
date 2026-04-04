@@ -95,10 +95,15 @@ export async function POST(req: NextRequest) {
     event: result.degraded ? "degraded" : "ok",
   });
 
+  // Don't re-pitch resources on every conversation turn. The /checkin response
+  // already surfaced them once when the student entered a yellow state;
+  // re-rendering them on every reply nags the student and erodes trust.
+  // Crisis (red) is handled deterministically above and DOES always attach
+  // resources; only the green/yellow converse path returns an empty list.
   return NextResponse.json({
     tier: sessionTier,
     reply: result.reply,
-    resources: getResourcesForTier(sessionTier),
+    resources: [],
     degraded: result.degraded,
   });
 }
