@@ -54,7 +54,6 @@
         "overdose",
         "overdosing",
         "od on pills",
-        "ode on pills",
         "jump off",
         "jumping off"
       ]
@@ -66,8 +65,9 @@
         "killing someone",
         "hurt someone",
         "hurting someone",
-        "shoot up",
-        "shoot someone"
+        "shoot someone",
+        "shoot up the",
+        "shoot up my"
       ]
     },
     "acute_crisis": {
