@@ -1,0 +1,29 @@
+{
+  "_doc": "MUN campus metadata. The campus key is stored ONLY in client-side sessionStorage, never in the server database, to eliminate quasi-identifier risk (see docs/research-brief.md §4.3).",
+  "campuses": [
+    {
+      "id": "st_johns",
+      "name": "St. John's Campus",
+      "location": "St. John's, NL",
+      "description": "MUN's main campus."
+    },
+    {
+      "id": "grenfell",
+      "name": "Grenfell Campus",
+      "location": "Corner Brook, NL",
+      "description": "MUN's west coast campus."
+    },
+    {
+      "id": "marine",
+      "name": "Marine Institute",
+      "location": "St. John's, NL",
+      "description": "MUN's Fisheries and Marine Institute."
+    },
+    {
+      "id": "any",
+      "name": "I'd rather not say",
+      "location": null,
+      "description": "Show general Newfoundland and Labrador resources."
+    }
+  ]
+}

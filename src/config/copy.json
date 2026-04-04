@@ -1,0 +1,104 @@
+{
+  "_doc": "User-facing UI text. Edit here to change copy without touching code. Tone: warm, grounded, never clinical. No purple gradients, no sparkles, no \"Build your dreams\" filler.",
+  "app": {
+    "name": "MUN MIND",
+    "tagline": "A private space to check in with yourself.",
+    "longDescription": "An anonymous mental health check-in companion for Memorial University students."
+  },
+  "landing": {
+    "heading": "How are you actually doing?",
+    "subheading": "Take a minute for yourself. No account, no tracking, no strings.",
+    "trustSignals": [
+      {
+        "icon": "lock",
+        "title": "Completely anonymous",
+        "description": "No login, no email, no tracking. Nothing you share here is ever linked to you."
+      },
+      {
+        "icon": "heart",
+        "title": "Not a replacement for real support",
+        "description": "This is a check-in, not therapy. We'll point you to real help whenever you need it."
+      },
+      {
+        "icon": "university",
+        "title": "Built for MUN students",
+        "description": "Made by students at Memorial University. Connected to real campus and NL resources."
+      }
+    ],
+    "ctaPrimary": "Start a check-in",
+    "ctaFooterCrisis": "In crisis? Get help now →",
+    "returnVisitHeading": "Welcome back."
+  },
+  "privacy": {
+    "modalHeading": "Before we begin",
+    "points": [
+      "No account needed. There's nothing to sign up for.",
+      "Your conversation isn't saved after you close this tab.",
+      "We never collect your name, email, or student number.",
+      "An anonymous mood score (1–5) may be stored to help MUN understand how students are doing — never linked to you.",
+      "No one at MUN can see what you share here.",
+      "If you're in crisis, we'll show you real support resources right away."
+    ],
+    "ackCheckbox": "I understand this is not counselling or therapy.",
+    "ackButton": "I understand — let's go"
+  },
+  "campusSelector": {
+    "heading": "Which campus are you on?",
+    "subheading": "We'll show you the right resources. This is the only thing we'll ever ask about you.",
+    "optionDefault": "I'd rather not say"
+  },
+  "chat": {
+    "greeting": "Hey. Welcome to MUN MIND. This is a private check-in — nothing here is saved or shared. How are you feeling today?",
+    "inputPlaceholder": "Type your response...",
+    "endSession": "End session",
+    "crisisResourcesLink": "Crisis resources",
+    "typingIndicator": "MUN MIND is thinking...",
+    "stillThinking": "Still thinking...",
+    "disclaimer": "MUN MIND is not counselling or therapy. If you need support, help is available.",
+    "moodWidgetHeading": "How would you describe your mood right now?",
+    "moodOptions": [
+      { "score": 5, "label": "Great", "id": "mood_great" },
+      { "score": 4, "label": "Good", "id": "mood_good" },
+      { "score": 3, "label": "Okay", "id": "mood_okay" },
+      { "score": 2, "label": "Low", "id": "mood_low" },
+      { "score": 1, "label": "Struggling", "id": "mood_struggling" }
+    ],
+    "quickReplies": [
+      "Academic stress",
+      "Loneliness",
+      "Sleep issues",
+      "Relationship stuff",
+      "Just need to vent"
+    ]
+  },
+  "mood": {
+    "historyHeading": "Your check-ins",
+    "historySubheading": "Stored only on your device. Never shared. Clear anytime.",
+    "clearButton": "Clear my data",
+    "emptyState": "Nothing here yet. Start a check-in to track how you're feeling."
+  },
+  "crisis": {
+    "bannerHeading": "It sounds like you might be going through something really serious.",
+    "bannerBody": "You don't have to handle this alone. The people below are ready to talk right now.",
+    "callCtaPrefix": "Call"
+  },
+  "errors": {
+    "apiFailure": "I'm having trouble connecting right now. This sometimes happens.",
+    "apiFailureRetry": "Try again",
+    "apiFailureResourcesLead": "If you need support right now, these resources are available 24/7:",
+    "offline": "You're offline. Your messages will send when you reconnect.",
+    "offlineResourcesLead": "You can still call these numbers:",
+    "rateLimited": "I've reached my limit for today. I'll be back tomorrow.",
+    "rateLimitedResourcesLead": "In the meantime, here are people you can talk to right now:"
+  },
+  "session": {
+    "timeoutHeading": "Still there?",
+    "timeoutBody": "Your session is still private.",
+    "timeoutButton": "I'm here",
+    "summaryHeading": "Session summary",
+    "summaryClosingMessage": "Thanks for checking in. It's okay to come back anytime.",
+    "summaryNotSavedNote": "This summary won't be saved after you close the tab.",
+    "summaryButtonClose": "Close session",
+    "summaryButtonContinue": "Keep talking"
+  }
+}

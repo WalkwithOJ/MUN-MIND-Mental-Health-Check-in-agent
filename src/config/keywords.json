@@ -1,0 +1,159 @@
+{
+  "_doc": "Crisis keyword categories for deterministic crisis detection. Red tier is ALWAYS triggered if any red phrase matches — negation does NOT suppress Red. Yellow tier triggers on moderate-distress phrases and can be suppressed by clear negation. False positives are acceptable; false negatives are NOT. Keywords are matched case-insensitively after text normalization.",
+  "_matching_note": "Entries of 3 characters or fewer (e.g., 'kms', 'od') MUST be matched with word boundaries in the detector — they cannot be substring-matched or they will produce false positives on unrelated words. The Phase 3 crisis-detector enforces this.",
+  "locale": "en",
+  "categories": {
+    "suicidal_ideation": {
+      "tier": "red",
+      "phrases": [
+        "kill myself",
+        "killing myself",
+        "end my life",
+        "ending my life",
+        "ending it all",
+        "end it all",
+        "want to die",
+        "wanna die",
+        "suicidal",
+        "suicide",
+        "no reason to live",
+        "nothing to live for",
+        "better off dead",
+        "better dead",
+        "better off without me",
+        "everyone would be better off without me",
+        "don't want to be here anymore",
+        "dont want to be here anymore",
+        "not want to be alive",
+        "tired of living",
+        "take my own life",
+        "taking my own life",
+        "off myself",
+        "do not want to exist",
+        "dont want to exist",
+        "don't want to wake up",
+        "dont want to wake up",
+        "not wake up",
+        "disappear forever",
+        "give up on life",
+        "giving up on life"
+      ]
+    },
+    "self_harm": {
+      "tier": "red",
+      "phrases": [
+        "cut myself",
+        "cutting myself",
+        "hurt myself",
+        "hurting myself",
+        "self harm",
+        "self-harm",
+        "burn myself",
+        "burning myself",
+        "harm myself",
+        "overdose",
+        "overdosing",
+        "od on pills",
+        "ode on pills",
+        "jump off",
+        "jumping off"
+      ]
+    },
+    "harm_to_others": {
+      "tier": "red",
+      "phrases": [
+        "kill someone",
+        "killing someone",
+        "hurt someone",
+        "hurting someone",
+        "shoot up",
+        "shoot someone"
+      ]
+    },
+    "acute_crisis": {
+      "tier": "red",
+      "phrases": [
+        "can't go on",
+        "cant go on",
+        "no way out",
+        "plan to end it",
+        "planning to end it",
+        "have a plan to kill",
+        "have the pills ready",
+        "wrote a note",
+        "wrote my note",
+        "final note",
+        "goodbye forever",
+        "last message",
+        "last goodbye"
+      ]
+    },
+    "leetspeak_variants": {
+      "tier": "red",
+      "phrases": [
+        "k1ll myself",
+        "kil myself",
+        "kms",
+        "unalive",
+        "unaliving",
+        "sew is ide",
+        "s u i c i d e"
+      ],
+      "_note": "'kms' is a short token and MUST be matched with word boundaries — see _matching_note at top of file."
+    },
+    "moderate_distress": {
+      "tier": "yellow",
+      "negatable": true,
+      "phrases": [
+        "really stressed",
+        "so stressed",
+        "overwhelmed",
+        "overwhelming",
+        "can't cope",
+        "cant cope",
+        "falling apart",
+        "exhausted",
+        "burned out",
+        "burnt out",
+        "anxious",
+        "anxiety",
+        "panic attack",
+        "panic attacks",
+        "depressed",
+        "depression",
+        "hopeless",
+        "worthless",
+        "lonely",
+        "isolated",
+        "alone in this",
+        "so sad",
+        "really sad",
+        "crying all the time",
+        "cant sleep",
+        "can't sleep",
+        "insomnia",
+        "no motivation",
+        "no energy"
+      ]
+    }
+  },
+  "negation_markers": [
+    "not",
+    "never",
+    "don't",
+    "dont",
+    "didn't",
+    "didnt",
+    "no longer",
+    "used to",
+    "stopped",
+    "isn't",
+    "isnt",
+    "wasn't",
+    "wasnt",
+    "wouldn't",
+    "wouldnt"
+  ],
+  "negation_window_tokens": 5,
+  "_safety_note": "Red-tier phrases are NEVER suppressed by negation. The detector may check negation only when deciding whether to downgrade a yellow match to green (e.g., 'I'm not stressed anymore'). Any red match is always red."
+}

@@ -44,6 +44,10 @@ Thumbs.db
 # Claude Code local session data
 .claude/settings.local.json
 
+# Internal workflow files — not for public repo
+CLAUDE.md
+tasks/
+
 # TypeScript
 *.tsbuildinfo
 # Note: next-env.d.ts IS committed per Next.js docs (don't gitignore it)
