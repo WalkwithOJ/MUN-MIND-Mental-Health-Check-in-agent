@@ -8,17 +8,26 @@ import type { NextConfig } from "next";
 // Current `'unsafe-inline'` on script-src is a known gap — it's required for
 // Next.js App Router hydration scripts unless we implement nonce injection.
 // Migration path: https://nextjs.org/docs/app/guides/content-security-policy
+//
+// 'unsafe-eval' is conditionally added in development ONLY — Next.js dev mode
+// (Turbopack + React DevTools) requires eval() for source maps and hot reload.
+// Production builds never set 'unsafe-eval'.
+const isDev = process.env.NODE_ENV !== "production";
+const scriptSrc = isDev
+  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+  : "script-src 'self' 'unsafe-inline'";
+
 const securityHeaders = [
   {
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      // 'unsafe-inline' for scripts is temporary — see TODO above
-      "script-src 'self' 'unsafe-inline'",
-      // Tailwind/Next.js inline their runtime styles; 'unsafe-inline' is required here
-      "style-src 'self' 'unsafe-inline'",
+      scriptSrc,
+      // Tailwind/Next.js inline their runtime styles; 'unsafe-inline' is required here.
+      // fonts.googleapis.com is allowed for the Material Symbols Outlined icon font.
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: blob:",
-      "font-src 'self' data:",
+      "font-src 'self' data: https://fonts.gstatic.com",
       // LLM providers, Supabase, and Vercel telemetry
       "connect-src 'self' https://generativelanguage.googleapis.com https://api.groq.com https://*.supabase.co https://vitals.vercel-insights.com https://va.vercel-scripts.com",
       "frame-ancestors 'none'",

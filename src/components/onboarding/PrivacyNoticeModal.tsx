@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 
-import { Button, Modal } from "@/components/ui";
+import { Button, Icon, Modal } from "@/components/ui";
 import copyJson from "@/config/copy.json";
 
 interface CopyFile {
@@ -18,6 +18,17 @@ interface CopyFile {
 
 const copy = (copyJson as unknown as CopyFile).privacy;
 
+// Material Symbols Outlined icons for each privacy bullet, mapped by bullet index.
+// The last bullet (crisis resources) gets an error-container styling.
+const POINT_ICONS = [
+  "no_accounts",
+  "history_toggle_off",
+  "visibility_off",
+  "shield_person",
+  "shield_person",
+  "emergency",
+];
+
 interface PrivacyNoticeModalProps {
   open: boolean;
   onAcknowledge: () => void;
@@ -25,14 +36,12 @@ interface PrivacyNoticeModalProps {
 }
 
 /**
- * First-visit privacy modal.
- *
- * Trust foundation of the product — the student reads this once before they
- * can start a check-in. The "I understand this is not counselling or therapy"
- * checkbox is a required acknowledgment, not a legal dark pattern.
- *
- * Copy lives in copy.json so a staff member can update wording without
- * touching code.
+ * First-visit privacy modal — matches the Stitch design:
+ *   - verified_user header icon
+ *   - editorial-shadow container
+ *   - filled Material Symbols for each bullet on a secondary-container chip
+ *   - final crisis bullet on an error-container chip
+ *   - gradient primary button + ghost Cancel
  */
 export function PrivacyNoticeModal({
   open,
@@ -48,88 +57,89 @@ export function PrivacyNoticeModal({
   }
 
   return (
-    <Modal open={open} onClose={onCancel} labelledBy={headingId}>
-      <div className="flex items-center gap-3 mb-3">
-        <div
-          aria-hidden="true"
-          className="w-10 h-10 rounded-full bg-[var(--color-secondary-container)] flex items-center justify-center"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-[var(--color-primary)]"
+    <Modal
+      open={open}
+      onClose={onCancel}
+      labelledBy={headingId}
+      className="max-w-2xl p-0 editorial-shadow border border-[var(--color-border-strong)]/15"
+    >
+      <div className="px-8 pt-10 pb-6">
+        <div className="flex items-center gap-3 mb-4 text-[var(--color-primary)]">
+          <Icon name="verified_user" className="text-[28px]" />
+          <h2
+            id={headingId}
+            className="text-[28px] leading-9 font-heading font-bold tracking-tight"
           >
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-          </svg>
+            {copy.modalHeading}
+          </h2>
         </div>
-        <h2
-          id={headingId}
-          className="text-[24px] leading-8 font-semibold text-[var(--color-primary)]"
-        >
-          {copy.modalHeading}
-        </h2>
+        <p className="text-[15px] leading-6 text-[var(--color-secondary)]">
+          {copy.bodyText}
+        </p>
       </div>
 
-      <p className="text-[14px] leading-5 text-[var(--color-text-body)] mb-6">
-        {copy.bodyText}
-      </p>
+      <div className="px-8 pb-6">
+        <div className="bg-[var(--color-surface-alt)] p-6 rounded-[16px] flex flex-col gap-5">
+          {copy.points.map((point, i) => {
+            const iconName = POINT_ICONS[i] ?? "check_circle";
+            const isCrisis = i === copy.points.length - 1;
+            return (
+              <div key={point} className="flex items-start gap-4">
+                <span
+                  aria-hidden="true"
+                  className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                    isCrisis
+                      ? "bg-[#ffdad6] text-[#93000a]"
+                      : "bg-[var(--color-secondary-container)] text-[var(--color-primary)]"
+                  }`}
+                >
+                  <Icon name={iconName} filled className="text-[16px]" />
+                </span>
+                <p
+                  className={`text-[14px] leading-5 text-[var(--color-text-body)] ${
+                    isCrisis ? "font-semibold" : ""
+                  }`}
+                >
+                  {point}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
-      <ul className="bg-[var(--color-surface-alt)] rounded-[8px] p-5 flex flex-col gap-4 mb-6">
-        {copy.points.map((point) => (
-          <li key={point} className="flex items-start gap-3">
-            <span
-              aria-hidden="true"
-              className="mt-0.5 w-6 h-6 shrink-0 rounded-full bg-[var(--color-secondary-container)] flex items-center justify-center text-[var(--color-primary)]"
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </span>
-            <span className="text-[14px] leading-5 text-[var(--color-text-body)]">
-              {point}
-            </span>
-          </li>
-        ))}
-      </ul>
+      <div className="px-8 pb-10 flex flex-col gap-6">
+        <label className="flex items-center gap-4 cursor-pointer min-h-[44px] group">
+          <span className="relative inline-flex">
+            <input
+              type="checkbox"
+              checked={acknowledged}
+              onChange={(e) => setAcknowledged(e.target.checked)}
+              className="peer appearance-none w-6 h-6 rounded-[4px] border-2 border-[var(--color-border-strong)] bg-[var(--color-surface-card)] cursor-pointer checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)] transition-colors"
+            />
+            <Icon
+              name="check"
+              className="absolute inset-0 m-auto text-white opacity-0 peer-checked:opacity-100 text-[16px] pointer-events-none"
+            />
+          </span>
+          <span className="text-[14px] leading-5 text-[var(--color-text-body)] select-none">
+            {copy.ackCheckbox}
+          </span>
+        </label>
 
-      <label className="flex items-center gap-3 mb-6 cursor-pointer min-h-[44px] py-2">
-        <input
-          type="checkbox"
-          checked={acknowledged}
-          onChange={(e) => setAcknowledged(e.target.checked)}
-          className="w-5 h-5 accent-[var(--color-primary)]"
-        />
-        <span className="text-[14px] leading-5 text-[var(--color-text-body)]">
-          {copy.ackCheckbox}
-        </span>
-      </label>
-
-      <div className="flex items-center justify-between gap-4">
-        <Button type="button" variant="ghost" onClick={onCancel}>
-          {copy.cancelButton}
-        </Button>
-        <Button
-          type="button"
-          onClick={handleAcknowledge}
-          disabled={!acknowledged}
-        >
-          {copy.ackButton}
-        </Button>
+        <div className="flex flex-col-reverse md:flex-row items-center justify-between gap-4">
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            {copy.cancelButton}
+          </Button>
+          <button
+            type="button"
+            onClick={handleAcknowledge}
+            disabled={!acknowledged}
+            className="group relative w-full md:w-auto inline-flex items-center justify-center px-8 py-3 rounded-[8px] bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-container)] text-white font-heading font-semibold shadow-[var(--shadow-sm)] min-h-[48px] transition-all duration-200 hover:opacity-95 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
+          >
+            {copy.ackButton}
+          </button>
+        </div>
       </div>
     </Modal>
   );

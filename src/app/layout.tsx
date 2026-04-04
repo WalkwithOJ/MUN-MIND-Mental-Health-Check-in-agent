@@ -5,6 +5,11 @@ import "./globals.css";
 import { AppFooter } from "@/components/AppFooter";
 import { AppHeader } from "@/components/AppHeader";
 
+// Material Symbols Outlined — used for iconography per the Stitch design system.
+// Self-hosted via Google Fonts CSS link; no tracking.
+const MATERIAL_SYMBOLS_URL =
+  "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap";
+
 const manrope = Manrope({
   variable: "--font-heading",
   subsets: ["latin"],
@@ -35,6 +40,9 @@ export default function RootLayout({
       lang="en"
       className={`${manrope.variable} ${plusJakarta.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="stylesheet" href={MATERIAL_SYMBOLS_URL} />
+      </head>
       <body className="min-h-full flex flex-col">
         <AppHeader />
         <main className="flex-1 flex flex-col">{children}</main>

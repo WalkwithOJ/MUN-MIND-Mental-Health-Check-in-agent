@@ -43,23 +43,43 @@ const copy = (copyJson as unknown as CopyFile).chat;
 const subscribeNoop = () => () => {};
 
 /**
- * Read onboarding state synchronously via useSyncExternalStore. Returns null
- * server-side (first render always shows "Loading…") and the real values after
- * hydration. This avoids the set-state-in-effect pattern.
+ * useSyncExternalStore requires getSnapshot to return a STABLE reference when
+ * the underlying value hasn't changed — otherwise React detects a new object
+ * on every render and fires an infinite loop ("The result of getSnapshot
+ * should be cached to avoid an infinite loop").
+ *
+ * We cache the last snapshot in module-scope closures per instance. Because
+ * the onboarding state is a process-wide singleton (sessionStorage), we can
+ * safely memoize at module level.
  */
-function useOnboardingState(): {
+interface OnboardingSnapshot {
   ok: boolean;
   campus: CampusId | null;
-} {
-  return useSyncExternalStore(
-    subscribeNoop,
-    () => {
-      const acked = hasAcknowledgedPrivacy();
-      const campus = getCampus();
-      return { ok: acked && !!campus, campus: campus ?? null };
-    },
-    () => ({ ok: false, campus: null })
-  );
+}
+
+const serverSnapshot: OnboardingSnapshot = { ok: false, campus: null };
+let cachedClientSnapshot: OnboardingSnapshot = { ok: false, campus: null };
+
+function getClientSnapshot(): OnboardingSnapshot {
+  const acked = hasAcknowledgedPrivacy();
+  const campus = getCampus() ?? null;
+  const ok = acked && !!campus;
+  if (
+    cachedClientSnapshot.ok === ok &&
+    cachedClientSnapshot.campus === campus
+  ) {
+    return cachedClientSnapshot;
+  }
+  cachedClientSnapshot = { ok, campus };
+  return cachedClientSnapshot;
+}
+
+function getServerSnapshot(): OnboardingSnapshot {
+  return serverSnapshot;
+}
+
+function useOnboardingState(): OnboardingSnapshot {
+  return useSyncExternalStore(subscribeNoop, getClientSnapshot, getServerSnapshot);
 }
 
 export function ChatContainer() {

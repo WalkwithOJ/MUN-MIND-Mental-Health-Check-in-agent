@@ -169,3 +169,41 @@ textarea:focus-visible {
     opacity: 0.9;
   }
 }
+
+/* --- Editorial landing treatments (from Stitch design) --- */
+
+/* Soft radial gradient used on the landing hero. Calm, off-center blobs
+   in the brand palette — no hard edges, no generic AI purple. */
+.editorial-gradient {
+  background:
+    radial-gradient(circle at 10% 20%, rgba(196, 235, 222, 0.4) 0%, transparent 50%),
+    radial-gradient(circle at 90% 80%, rgba(161, 208, 200, 0.3) 0%, transparent 50%);
+}
+
+/* Asymmetric "organic" blob shape used for decorative background elements. */
+.organic-shape {
+  border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+}
+
+/* Subtle editorial card shadow for modals and elevated surfaces. */
+.editorial-shadow {
+  box-shadow: 0 12px 32px rgba(27, 28, 25, 0.06);
+}
+
+/* Material Symbols Outlined defaults — matches the Stitch design tokens. */
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}

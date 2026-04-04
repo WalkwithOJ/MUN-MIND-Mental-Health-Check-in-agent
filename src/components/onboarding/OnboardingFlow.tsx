@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
-import { Button } from "@/components/ui";
+import { Icon } from "@/components/ui";
 import copyJson from "@/config/copy.json";
 import {
   type CampusId,
@@ -38,13 +38,15 @@ const copy = (copyJson as unknown as CopyFile).landing;
 
 type Stage = "landing" | "privacy" | "campus";
 
-/**
- * Read isReturnVisit from sessionStorage via useSyncExternalStore — the
- * idiomatic React 19 pattern for external state. The server snapshot always
- * returns false so the server-rendered HTML matches the first-visit heading;
- * React swaps to the real value on hydration.
- */
+// Map the icon keys in copy.json to Material Symbols Outlined icon names.
+const ICON_MAP: Record<string, string> = {
+  lock: "visibility_off",
+  heart: "info",
+  university: "school",
+};
+
 const subscribeNoop = () => () => {};
+
 function useIsReturnVisit(): boolean {
   return useSyncExternalStore(
     subscribeNoop,
@@ -53,28 +55,12 @@ function useIsReturnVisit(): boolean {
   );
 }
 
-/**
- * Orchestrates the onboarding flow: Landing → Privacy (first visit only) →
- * Campus Selector → Chat.
- *
- * State transitions:
- *   - First visit: student clicks CTA → privacy modal → campus selector → /chat
- *   - Return visit: student clicks CTA → straight to /chat (privacy already
- *     acknowledged, campus already chosen, both from sessionStorage)
- *   - If the student cleared sessionStorage (new tab, private window), they
- *     start over from the landing page
- *
- * All state lives in sessionStorage — no server roundtrip, no persistent
- * identifiers. See src/lib/onboarding-storage.ts.
- */
 export function OnboardingFlow() {
   const router = useRouter();
   const [stage, setStage] = useState<Stage>("landing");
   const isReturning = useIsReturnVisit();
   const campusHeadingRef = useRef<HTMLHeadingElement | null>(null);
 
-  // When the stage transitions to "campus", move focus to the heading so
-  // keyboard/screen-reader users know the view has changed.
   useEffect(() => {
     if (stage === "campus") {
       campusHeadingRef.current?.focus();
@@ -82,8 +68,6 @@ export function OnboardingFlow() {
   }, [stage]);
 
   function handleStartCheckIn() {
-    // If the student has already acknowledged privacy AND picked a campus in
-    // this session, skip straight to chat. Otherwise run through the gates.
     if (hasAcknowledgedPrivacy() && getCampus()) {
       router.push("/chat");
       return;
@@ -102,8 +86,6 @@ export function OnboardingFlow() {
 
   function handleCampusSelect(campus: CampusId) {
     setCampus(campus);
-    // Mark the tab as fully onboarded AFTER completion, not on page load.
-    // This way "Welcome back" only shows for students who completed the flow.
     markVisited();
     router.push("/chat");
   }
@@ -151,25 +133,46 @@ function LandingHero({
   trustSignals: TrustSignal[];
 }) {
   return (
-    <section className="flex-1 flex flex-col">
-      <div className="max-w-[960px] mx-auto px-6 py-16 md:py-24 flex flex-col items-center text-center gap-6">
-        <h1 className="text-[40px] leading-[48px] md:text-[56px] md:leading-[64px] font-bold text-[var(--color-primary)] tracking-tight max-w-[720px]">
-          {heading}
-        </h1>
-        <p className="text-[18px] leading-7 md:text-[20px] md:leading-8 text-[var(--color-text-body)] max-w-[560px]">
-          {subheading}
-        </p>
-        <div className="mt-2">
-          <Button size="lg" onClick={onStart}>
-            {ctaLabel}
-          </Button>
-        </div>
-      </div>
+    <section className="relative flex-1 flex flex-col editorial-gradient overflow-hidden">
+      {/* Decorative organic shapes — calm, off-center, pure CSS */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-20 top-1/4 w-96 h-96 bg-[var(--color-secondary-container)] organic-shape blur-3xl opacity-20 -z-10"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-20 bottom-1/4 w-80 h-80 bg-[var(--color-accent)] organic-shape blur-3xl opacity-20 -z-10"
+      />
 
-      <div className="max-w-[1120px] w-full mx-auto px-6 pb-16 grid grid-cols-1 md:grid-cols-3 gap-4">
-        {trustSignals.map((signal) => (
-          <TrustSignalCard key={signal.title} signal={signal} />
-        ))}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-16 md:py-24">
+        <div className="max-w-4xl w-full text-center flex flex-col items-center gap-12">
+          <div className="flex flex-col items-center gap-6">
+            <h1 className="text-[44px] leading-[52px] md:text-[72px] md:leading-[80px] font-bold font-heading text-[var(--color-primary)] tracking-tight">
+              {heading}
+            </h1>
+            <p className="text-[18px] leading-7 md:text-[22px] md:leading-9 text-[var(--color-secondary)] max-w-2xl">
+              {subheading}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onStart}
+            className="group relative overflow-hidden px-10 py-5 rounded-[8px] bg-[var(--color-primary)] text-white text-[18px] font-bold shadow-[var(--shadow-sm)] transition-all duration-200 ease-out hover:shadow-xl hover:shadow-[var(--color-primary)]/20 active:scale-[0.98]"
+          >
+            <span className="relative z-10">{ctaLabel}</span>
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-container)] opacity-0 group-hover:opacity-100 transition-opacity"
+            />
+          </button>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full pt-8">
+            {trustSignals.map((signal) => (
+              <TrustSignalCard key={signal.title} signal={signal} />
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -177,56 +180,16 @@ function LandingHero({
 
 function TrustSignalCard({ signal }: { signal: TrustSignal }) {
   return (
-    <div className="bg-[var(--color-surface-high)] rounded-[16px] p-6 flex flex-col items-center text-center gap-3">
-      <div
-        aria-hidden="true"
-        className="w-10 h-10 rounded-full bg-[var(--color-surface-card)] flex items-center justify-center text-[var(--color-primary)]"
-      >
-        <TrustIcon name={signal.icon} />
+    <div className="bg-[var(--color-surface-high)] rounded-[16px] p-8 flex flex-col items-center text-center gap-4 transition-transform duration-300 hover:-translate-y-1">
+      <div className="w-12 h-12 rounded-full bg-[var(--color-surface-card)] flex items-center justify-center text-[var(--color-primary)]">
+        <Icon name={ICON_MAP[signal.icon] ?? "check_circle"} className="text-[24px]" />
       </div>
-      <h3 className="text-[16px] leading-6 font-semibold text-[var(--color-primary)]">
+      <h3 className="text-[18px] leading-7 font-bold font-heading text-[var(--color-primary)]">
         {signal.title}
       </h3>
-      <p className="text-[14px] leading-5 text-[var(--color-text-body)]">
+      <p className="text-[14px] leading-5 text-[var(--color-secondary)]">
         {signal.description}
       </p>
     </div>
-  );
-}
-
-function TrustIcon({ name }: { name: string }) {
-  // Minimal inline icons so we don't pull an icon library just for the landing page.
-  // Each matches the brand feel — soft strokes, no sparkles.
-  const common = {
-    width: 20,
-    height: 20,
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 2,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-  };
-  if (name === "lock") {
-    return (
-      <svg {...common}>
-        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-      </svg>
-    );
-  }
-  if (name === "heart") {
-    return (
-      <svg {...common}>
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-      </svg>
-    );
-  }
-  // Default: university / book icon
-  return (
-    <svg {...common}>
-      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-    </svg>
   );
 }
