@@ -83,9 +83,14 @@ export function MessageList({
               <ChatBubble role="bot">{msg.content}</ChatBubble>
               {msg.resources && msg.resources.length > 0 && (
                 <div className="flex flex-col gap-2 ml-2">
-                  {msg.resources.slice(0, 3).map((r) => (
-                    <ResourceCard key={r.id} resource={r} />
-                  ))}
+                  {/* Red tier: top 3 crisis lines. Yellow/Green: show up to 5
+                      so campus-specific resources (MUN Wellness Centre, Grenfell
+                      Student Wellness, etc.) aren't hidden behind generic lines. */}
+                  {msg.resources
+                    .slice(0, msg.tier === "red" ? 3 : 5)
+                    .map((r) => (
+                      <ResourceCard key={r.id} resource={r} />
+                    ))}
                 </div>
               )}
             </div>
