@@ -6,8 +6,8 @@
     "longDescription": "An anonymous mental health check-in companion for Memorial University students."
   },
   "landing": {
-    "heading": "How are you actually doing?",
-    "subheading": "Take a minute for yourself. No account, no tracking, no strings.",
+    "heading": "A private space to check in with yourself",
+    "subheading": "A warm, quiet environment designed for reflection and clarity, away from the noise of the student day.",
     "trustSignals": [
       {
         "icon": "lock",
@@ -25,7 +25,7 @@
         "description": "Made by students at Memorial University. Connected to real campus and NL resources."
       }
     ],
-    "ctaPrimary": "Start a check-in",
+    "ctaPrimary": "Start a Check-In",
     "ctaFooterCrisis": "In crisis? Get help now →",
     "returnVisitHeading": "Welcome back."
   },

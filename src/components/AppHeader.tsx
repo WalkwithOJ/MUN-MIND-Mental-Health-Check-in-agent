@@ -1,13 +1,34 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { Icon } from "@/components/ui";
+import { cn } from "@/lib/cn";
+
+interface NavLink {
+  label: string;
+  href: string;
+  matchPaths?: string[];
+}
+
+// Nav links mirror the Stitch landing_page_desktop design.
+// Active state is determined by pathname so the underline follows the user.
+const NAV_LINKS: NavLink[] = [
+  { label: "Home", href: "/", matchPaths: ["/"] },
+  { label: "Our Mission", href: "/about", matchPaths: ["/about"] },
+  { label: "Resources", href: "/resources", matchPaths: ["/resources"] },
+];
 
 /**
- * Persistent top chrome — matches the Stitch landing design.
- * Logo: spa icon in a primary rounded square + "MUN MIND" wordmark.
- * "Get Help" pill is always visible per PRD §7.
+ * Persistent top chrome.
+ * - Logo: `spa` icon in a primary rounded square + "MUN MIND" wordmark
+ * - Nav: Home / Our Mission / Resources (active link has a primary underline)
+ * - Get Help: always-visible crisis CTA (44px touch target)
  */
 export function AppHeader() {
+  const pathname = usePathname();
+
   return (
     <header className="w-full bg-[rgba(250,249,244,0.8)] backdrop-blur-xl sticky top-0 z-40 border-b border-[var(--color-border)]">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
@@ -26,6 +47,34 @@ export function AppHeader() {
             MUN MIND
           </span>
         </Link>
+
+        <nav
+          aria-label="Primary"
+          className="hidden md:flex items-center gap-8"
+        >
+          {NAV_LINKS.map((link) => {
+            const isActive =
+              link.matchPaths?.some((p) =>
+                p === "/" ? pathname === "/" : pathname.startsWith(p)
+              ) ?? false;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "inline-flex items-center min-h-[44px] font-heading text-[16px]",
+                  "transition-colors duration-200",
+                  isActive
+                    ? "font-semibold text-[var(--color-primary)] border-b-2 border-[var(--color-primary)]"
+                    : "font-normal text-[var(--color-secondary)] hover:text-[var(--color-primary-container)]"
+                )}
+                aria-current={isActive ? "page" : undefined}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+        </nav>
 
         <Link
           href="/resources"
