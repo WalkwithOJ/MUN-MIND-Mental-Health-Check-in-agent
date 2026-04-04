@@ -13,36 +13,21 @@
 
 import "server-only";
 
-import { z } from "zod";
-
 import { promptsConfig } from "@/lib/config";
 
 import { LLMError } from "./errors";
 import { MAX_HISTORY_MESSAGES } from "./history";
 import { classifyHttpError, LLM_TIMEOUT_MS, stripJsonFences } from "./http";
+import { parseAssessmentResponse } from "./schema";
 import {
   type AssessmentResult,
   type ConversationResult,
   type LLMProvider,
   type Message,
-  type MoodScore,
 } from "./types";
 
 const GROQ_MODEL = "llama-3.3-70b-versatile";
 const GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
-
-const assessResponseSchema = z.object({
-  reply: z.string().min(1),
-  moodScore: z.union([
-    z.literal(1),
-    z.literal(2),
-    z.literal(3),
-    z.literal(4),
-    z.literal(5),
-  ]),
-  tier: z.enum(["green", "yellow"]),
-  topicTags: z.array(z.string()).max(3),
-});
 
 export class GroqAdapter implements LLMProvider {
   readonly name = "groq";
@@ -74,21 +59,17 @@ export class GroqAdapter implements LLMProvider {
     const response = await this.post(body);
     const text = extractText(response);
     const parsed = safeParseJson(text);
-    const validated = assessResponseSchema.safeParse(parsed);
-    if (!validated.success) {
+    try {
+      const normalized = parseAssessmentResponse(parsed);
+      return { ...normalized, degraded: false };
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : "unknown";
       throw new LLMError(
         "groq",
         "parse",
-        "Groq returned an assessment response that did not match the expected schema"
+        `Groq response shape mismatch: ${detail}`
       );
     }
-    return {
-      reply: validated.data.reply,
-      moodScore: validated.data.moodScore as MoodScore,
-      tier: validated.data.tier,
-      topicTags: validated.data.topicTags,
-      degraded: false,
-    };
   }
 
   async converse(
