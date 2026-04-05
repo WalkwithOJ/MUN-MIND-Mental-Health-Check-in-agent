@@ -9,6 +9,7 @@ import { useIdleTimer } from "@/hooks/useIdleTimer";
 import copyJson from "@/config/copy.json";
 import {
   type CampusId,
+  clearOnboardingState,
   getCampus,
   hasAcknowledgedPrivacy,
 } from "@/lib/onboarding-storage";
@@ -140,10 +141,13 @@ function ChatUI({ campus }: { campus: CampusId }) {
   }
 
   function handleCloseSession() {
-    // Navigate home. In-memory chat state is discarded by unmount; onboarding
-    // state stays in sessionStorage so a follow-up check-in in the same tab
-    // skips the privacy + campus gates.
+    // Clicking "Close session" is a deliberate reset. We wipe the onboarding
+    // flags in sessionStorage so a follow-up check-in in the same tab goes
+    // through the full privacy + campus flow — visibly demonstrating that
+    // nothing from this session carried over. In-memory chat state is
+    // discarded automatically when ChatUI unmounts on navigation.
     setShowSummary(false);
+    clearOnboardingState();
     router.push("/");
   }
 
