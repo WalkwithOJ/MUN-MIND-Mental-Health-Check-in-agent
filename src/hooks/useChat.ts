@@ -120,12 +120,29 @@ export function useChat({ campus }: UseChatOptions) {
   );
 
   const addMessage = useCallback((msg: Omit<ChatMessage, "id">) => {
+    const id = nextId();
     setMessages((prev) => {
-      const next = [...prev, { ...msg, id: nextId() }];
+      const next = [...prev, { ...msg, id }];
       messagesRef.current = next;
       return next;
     });
+    return id;
   }, []);
+
+  /**
+   * Update an existing message in place, identified by its id. Used by the
+   * streaming path to append tokens to a bot bubble as they arrive.
+   */
+  const updateMessage = useCallback(
+    (id: string, patch: Partial<Omit<ChatMessage, "id">>) => {
+      setMessages((prev) => {
+        const next = prev.map((m) => (m.id === id ? { ...m, ...patch } : m));
+        messagesRef.current = next;
+        return next;
+      });
+    },
+    []
+  );
 
   /**
    * Escalate to red irreversibly. Server cannot downgrade; a local red
@@ -256,6 +273,15 @@ export function useChat({ campus }: UseChatOptions) {
     const historyWithoutNewMessage = messagesRef.current.slice(0, -1);
     const history = buildHistoryForApi(historyWithoutNewMessage);
 
+    // Create an empty bot bubble up front. Streaming tokens will append to it;
+    // on error we either replace its content with the degraded reply or leave
+    // the server's final sentinel to fill in tier + resources.
+    const botMessageId = addMessage({
+      role: "bot",
+      content: "",
+      tier: currentTier,
+    });
+
     try {
       const res = await fetch("/api/converse", {
         method: "POST",
@@ -264,29 +290,84 @@ export function useChat({ campus }: UseChatOptions) {
           message: input,
           history,
           sessionTier,
+          stream: true,
         }),
       });
-      if (!res.ok) {
+      if (!res.ok || !res.body) {
         throw new Error(`converse failed: ${res.status}`);
       }
-      const data = (await res.json()) as ConverseResponse;
-      const newTier: CrisisTier = mergeTier(tierRef.current, data.tier);
-      setTier(newTier);
 
-      addMessage({
-        role: "bot",
-        content: data.reply,
-        tier: newTier,
-        // Trust the server — /api/converse always returns [] for non-crisis
-        // turns so we don't re-pitch resources on every follow-up.
-        resources: filterByCampus(data.resources, campus),
-        deterministic: data.deterministic ?? data.degraded ?? false,
+      // Check the content type — if the server returned a non-streamed JSON
+      // body (e.g. the deterministic red path, or a 4xx that fell through to
+      // jsonError), handle it as a one-shot response.
+      const contentType = res.headers.get("content-type") ?? "";
+      if (!contentType.includes("x-ndjson")) {
+        const data = (await res.json()) as ConverseResponse;
+        const newTier: CrisisTier = mergeTier(tierRef.current, data.tier);
+        setTier(newTier);
+        updateMessage(botMessageId, {
+          content: data.reply,
+          tier: newTier,
+          resources: filterByCampus(data.resources, campus),
+          deterministic: data.deterministic ?? data.degraded ?? false,
+        });
+        return;
+      }
+
+      // NDJSON streaming path — read tokens as they arrive.
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let accumulated = "";
+      let finalTier: CrisisTier = currentTier;
+      let finalResources: Resource[] = [];
+      let finalDegraded = false;
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        // Each complete NDJSON frame ends with a newline. Parse them in order
+        // and keep any partial frame in the buffer for the next read.
+        let newlineIdx: number;
+        while ((newlineIdx = buffer.indexOf("\n")) !== -1) {
+          const line = buffer.slice(0, newlineIdx).trim();
+          buffer = buffer.slice(newlineIdx + 1);
+          if (!line) continue;
+          try {
+            const frame = JSON.parse(line) as
+              | { type: "token"; text: string }
+              | {
+                  type: "end";
+                  tier: SessionTier;
+                  resources: Resource[];
+                  degraded: boolean;
+                };
+            if (frame.type === "token") {
+              accumulated += frame.text;
+              updateMessage(botMessageId, { content: accumulated });
+            } else if (frame.type === "end") {
+              finalTier = mergeTier(tierRef.current, frame.tier);
+              finalResources = filterByCampus(frame.resources, campus);
+              finalDegraded = frame.degraded;
+            }
+          } catch {
+            // Ignore malformed frames — keep reading.
+          }
+        }
+      }
+
+      setTier(finalTier);
+      updateMessage(botMessageId, {
+        tier: finalTier,
+        resources: finalResources,
+        deterministic: finalDegraded,
       });
     } catch {
       const fallbackTier: CrisisTier =
         tierRef.current === "red" ? "red" : "yellow";
-      addMessage({
-        role: "bot",
+      updateMessage(botMessageId, {
         content: CONVERSE_DEGRADED_REPLY,
         tier: fallbackTier,
         resources: getResourcesForTier(fallbackTier, campus),

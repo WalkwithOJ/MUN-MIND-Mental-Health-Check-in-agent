@@ -25,6 +25,7 @@ import { capHistory, MAX_HISTORY_MESSAGES, MAX_HISTORY_TURNS } from "./history";
 import {
   type AssessmentResult,
   type ConversationResult,
+  type ConversationStreamEvent,
   type LLMProvider,
   type Message,
 } from "./types";
@@ -183,6 +184,76 @@ export async function routeConverse(
     reply: promptsConfig.converse_degraded_response.reply,
     degraded: true,
   };
+}
+
+/**
+ * Streaming conversation turn. Tries Groq streaming first; on any error
+ * (network, rate-limit, parse, auth) yields a `degraded` sentinel event so
+ * the API route can fall back to the deterministic response.
+ *
+ * Unlike routeConverse, this is an async generator. The API route wraps it
+ * in a ReadableStream that the client consumes.
+ *
+ * Safety contract: this function does NOT run crisis detection. Callers
+ * MUST run detectCrisis on the full input BEFORE invoking this, same as
+ * the non-streaming path.
+ */
+export async function* routeConverseStream(
+  history: Message[],
+  input: string,
+  providers?: { groq?: LLMProvider }
+): AsyncIterable<ConversationStreamEvent | { type: "degraded" }> {
+  const cappedHistory = capHistory(history);
+  const groq = providers?.groq ?? tryCreate(() => new GroqAdapter());
+
+  if (!groq || !groq.converseStream) {
+    logSafeEvent({
+      phase: "converse",
+      provider: "groq",
+      outcome: "degraded",
+      errorType: "not_available",
+    });
+    yield { type: "degraded" };
+    return;
+  }
+
+  let sawError = false;
+  let tokenCount = 0;
+  try {
+    for await (const evt of groq.converseStream(cappedHistory, input)) {
+      if (evt.type === "error") {
+        sawError = true;
+        logSafeEvent({
+          phase: "converse",
+          provider: "groq",
+          outcome: "degraded",
+          errorType: evt.errorType,
+        });
+        yield { type: "degraded" };
+        return;
+      }
+      if (evt.type === "token") tokenCount += 1;
+      yield evt;
+    }
+  } catch {
+    sawError = true;
+    logSafeEvent({
+      phase: "converse",
+      provider: "groq",
+      outcome: "degraded",
+      errorType: "unknown",
+    });
+    yield { type: "degraded" };
+    return;
+  }
+
+  if (!sawError && tokenCount > 0) {
+    logSafeEvent({
+      phase: "converse",
+      provider: "groq",
+      outcome: "ok",
+    });
+  }
 }
 
 // --- helpers ---

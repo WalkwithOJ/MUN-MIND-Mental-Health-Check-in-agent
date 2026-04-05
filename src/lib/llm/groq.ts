@@ -22,6 +22,7 @@ import { parseAssessmentResponse } from "./schema";
 import {
   type AssessmentResult,
   type ConversationResult,
+  type ConversationStreamEvent,
   type LLMProvider,
   type Message,
 } from "./types";
@@ -101,6 +102,136 @@ export class GroqAdapter implements LLMProvider {
       throw new LLMError("groq", "parse", "Groq returned an empty reply");
     }
     return { reply, degraded: false };
+  }
+
+  /**
+   * Streaming variant of `converse`. Uses Groq's OpenAI-compatible SSE
+   * streaming format (`data: {json}\n\n` frames, terminated by
+   * `data: [DONE]`). Yields token events as they arrive, then a single
+   * `end` event.
+   *
+   * If an error occurs mid-stream, yields an `error` event and terminates.
+   * The router will fall back to the non-streaming degraded response.
+   *
+   * NO LOGGING RULE: never log tokens or assembled text. Only errors with
+   * provider + status.
+   */
+  async *converseStream(
+    history: Message[],
+    input: string
+  ): AsyncIterable<ConversationStreamEvent> {
+    const capped = history.slice(-MAX_HISTORY_MESSAGES);
+    const messages = [
+      { role: "system" as const, content: promptsConfig.converse_system_prompt },
+      ...capped.map((m) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      })),
+      { role: "user" as const, content: input },
+    ];
+
+    const body = {
+      model: GROQ_MODEL,
+      messages,
+      temperature: 0.7,
+      max_tokens: 512,
+      stream: true,
+    };
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), LLM_TIMEOUT_MS);
+
+    let res: Response;
+    try {
+      res = await fetch(GROQ_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+    } catch (err) {
+      clearTimeout(timeout);
+      if ((err as Error)?.name === "AbortError") {
+        yield { type: "error", errorType: "network" };
+      } else {
+        yield { type: "error", errorType: "network" };
+      }
+      return;
+    }
+
+    if (!res.ok) {
+      clearTimeout(timeout);
+      const classified = classifyHttpError("groq", res.status);
+      yield { type: "error", errorType: classified.type };
+      return;
+    }
+
+    const body_stream = res.body;
+    if (!body_stream) {
+      clearTimeout(timeout);
+      yield { type: "error", errorType: "parse" };
+      return;
+    }
+
+    const reader = body_stream.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let gotAnyToken = false;
+
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        // SSE frames are separated by double newlines. Parse complete frames
+        // and keep any partial trailing frame in the buffer.
+        let sep: number;
+        while ((sep = buffer.indexOf("\n\n")) !== -1) {
+          const frame = buffer.slice(0, sep);
+          buffer = buffer.slice(sep + 2);
+
+          // Each frame has one or more lines starting with "data: ". For
+          // chat completions there's always just one data line per frame.
+          for (const line of frame.split("\n")) {
+            if (!line.startsWith("data:")) continue;
+            const payload = line.slice(5).trim();
+            if (payload === "[DONE]") {
+              // Terminator — break out and emit `end` below
+              yield { type: "end" };
+              return;
+            }
+            try {
+              const parsed = JSON.parse(payload) as {
+                choices?: Array<{ delta?: { content?: string } }>;
+              };
+              const text = parsed.choices?.[0]?.delta?.content;
+              if (typeof text === "string" && text.length > 0) {
+                gotAnyToken = true;
+                yield { type: "token", text };
+              }
+            } catch {
+              // Ignore un-parseable frames (Groq occasionally emits keep-alives)
+            }
+          }
+        }
+      }
+      // Stream ended without a [DONE] marker — treat as complete if we got
+      // any tokens, else as a parse error.
+      if (gotAnyToken) {
+        yield { type: "end" };
+      } else {
+        yield { type: "error", errorType: "parse" };
+      }
+    } catch {
+      yield { type: "error", errorType: "network" };
+    } finally {
+      clearTimeout(timeout);
+      reader.releaseLock();
+    }
   }
 
   private async post(body: unknown): Promise<unknown> {

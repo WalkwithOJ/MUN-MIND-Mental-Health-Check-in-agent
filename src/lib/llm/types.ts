@@ -45,10 +45,32 @@ export interface ConversationResult {
   degraded: boolean;
 }
 
+/**
+ * Incremental token events emitted by a streaming conversation call.
+ * Providers yield `{type: "token", text}` for each chunk, then a final
+ * `{type: "end"}` sentinel. `{type: "error"}` terminates the stream early —
+ * callers MUST treat this as a signal to fall back to the non-streaming
+ * degraded reply (the router handles this automatically).
+ */
+export type ConversationStreamEvent =
+  | { type: "token"; text: string }
+  | { type: "end" }
+  | { type: "error"; errorType: string };
+
 export interface LLMProvider {
   name: string;
   assess(input: string): Promise<AssessmentResult>;
   converse(history: Message[], input: string): Promise<ConversationResult>;
+  /**
+   * Optional streaming variant of `converse`. Providers that don't implement
+   * this get a non-streaming fallback at the router layer. Gemini's streaming
+   * is not exposed here — Groq is the only primary converse path, so only
+   * Groq implements this method.
+   */
+  converseStream?(
+    history: Message[],
+    input: string
+  ): AsyncIterable<ConversationStreamEvent>;
 }
 
 // Re-export error types from the client-safe errors module
