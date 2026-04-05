@@ -50,7 +50,9 @@ const securityHeaders = [
   },
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
+    // microphone=(self) allows voice input on our own origin only.
+    // The Web Speech API (SpeechRecognition) needs this — see VoiceButton.tsx.
+    value: "camera=(), microphone=(self), geolocation=(), browsing-topics=()",
   },
   {
     // HSTS without `preload` — adding `preload` is a permanent commitment and
