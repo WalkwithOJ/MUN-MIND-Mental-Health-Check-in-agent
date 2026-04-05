@@ -29,8 +29,12 @@
   --color-text-on-primary: #ffffff;
   --color-text-disabled: rgba(27, 28, 25, 0.3);
 
-  --color-border: rgba(192, 200, 198, 0.2);
-  --color-border-strong: #c0c8c6;
+  --color-border: rgba(125, 140, 137, 0.2); /* subtle, decorative — not a UI boundary */
+  /* Darkened from #c0c8c6 → #7d8c89 so the border alone clears the WCAG 1.4.11
+     3:1 contrast ratio against surface colors (#FAF9F4, #FFFFFF, #F5F4EF).
+     Used as the sole identifier for inputs, mood cards, resource cards,
+     checkboxes, and the secondary CTA border on /about. */
+  --color-border-strong: #7d8c89;
 
   /* Crisis tier — used sparingly; see docs/PRD.md §7. Not alarming red. */
   --color-crisis: #ba1a1a;

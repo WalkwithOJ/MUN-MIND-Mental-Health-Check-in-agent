@@ -26,9 +26,9 @@ const plusJakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   // metadataBase makes icon and OG image URLs absolute when platforms scrape
-  // them. Uses the Vercel production URL in prod, localhost in dev.
+  // them. Uses the production domain by default; override via env for previews.
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://mun-mind.vercel.app"
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://munmind.me"
   ),
   title: {
     default: "MUN MIND — a private space to check in with yourself",

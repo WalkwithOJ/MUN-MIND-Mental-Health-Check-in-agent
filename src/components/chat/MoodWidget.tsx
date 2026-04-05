@@ -90,6 +90,7 @@ function MoodIcon({ score }: { score: 1 | 2 | 3 | 4 | 5 }) {
     strokeLinecap: "round" as const,
     strokeLinejoin: "round" as const,
     className: "text-[var(--color-primary)]",
+    "aria-hidden": true,
   };
   if (score >= 4) {
     return (

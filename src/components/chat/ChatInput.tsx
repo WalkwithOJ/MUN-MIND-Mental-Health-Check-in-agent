@@ -141,6 +141,7 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
+          aria-hidden="true"
         >
           <path d="M12 19V5" />
           <path d="M5 12l7-7 7 7" />

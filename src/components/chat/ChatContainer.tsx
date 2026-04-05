@@ -167,7 +167,7 @@ function ChatUI({ campus }: { campus: CampusId }) {
         <button
           type="button"
           onClick={handleEndSession}
-          className="text-[12px] font-semibold text-[var(--color-primary)] underline hover:text-[var(--color-primary-container)] transition-colors min-h-[32px] px-2"
+          className="inline-flex items-center text-[12px] font-semibold text-[var(--color-primary)] underline hover:text-[var(--color-primary-container)] transition-colors min-h-[44px] px-3"
         >
           {copy.endSession}
         </button>
