@@ -159,20 +159,6 @@ function ChatUI({ campus }: { campus: CampusId }) {
     <div className="flex-1 flex flex-col">
       {tier === "red" && <CrisisBanner resources={crisisResources} />}
 
-      {/* Chat header row — back link + end session */}
-      <div className="max-w-[720px] w-full mx-auto px-4 pt-4 flex items-center justify-between">
-        <p className="text-[11px] leading-4 text-[var(--color-text-muted)]">
-          {copy.disclaimer}
-        </p>
-        <button
-          type="button"
-          onClick={handleEndSession}
-          className="inline-flex items-center text-[12px] font-semibold text-[var(--color-primary)] underline hover:text-[var(--color-primary-container)] transition-colors min-h-[44px] px-3"
-        >
-          {copy.endSession}
-        </button>
-      </div>
-
       {/* Bot greeting card (always visible above the message list) */}
       {messages.length === 0 && (
         <div className="max-w-[720px] w-full mx-auto px-4 pt-6">
@@ -190,8 +176,22 @@ function ChatUI({ campus }: { campus: CampusId }) {
         onMoodSelect={selectMood}
       />
 
+      {/* Sticky bottom: disclaimer + end-session link above the input so both
+          stay reachable without scrolling, on mobile and desktop alike. */}
       <div className="sticky bottom-0 bg-[var(--color-surface)] border-t border-[var(--color-border-strong)]">
-        <div className="max-w-[720px] mx-auto px-4 py-4">
+        <div className="max-w-[720px] mx-auto px-4 pt-2 pb-4">
+          <div className="flex items-center justify-between gap-3 mb-1">
+            <p className="text-[11px] leading-4 text-[var(--color-text-muted)] truncate">
+              {copy.disclaimer}
+            </p>
+            <button
+              type="button"
+              onClick={handleEndSession}
+              className="shrink-0 inline-flex items-center text-[12px] font-semibold text-[var(--color-primary)] underline hover:text-[var(--color-primary-container)] transition-colors min-h-[44px] px-3"
+            >
+              {copy.endSession}
+            </button>
+          </div>
           <ChatInput onSend={sendMessage} disabled={pending} />
         </div>
       </div>
