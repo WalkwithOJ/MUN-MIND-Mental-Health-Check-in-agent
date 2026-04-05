@@ -25,9 +25,31 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "MUN MIND",
+  // metadataBase makes icon and OG image URLs absolute when platforms scrape
+  // them. Uses the Vercel production URL in prod, localhost in dev.
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://mun-mind.vercel.app"
+  ),
+  title: {
+    default: "MUN MIND — a private space to check in with yourself",
+    template: "%s — MUN MIND",
+  },
   description:
-    "An anonymous mental health check-in companion for Memorial University students.",
+    "An anonymous mental health check-in companion for Memorial University students. No login, no judgment, no appointment needed.",
+  openGraph: {
+    title: "MUN MIND — a private space to check in with yourself",
+    description:
+      "Anonymous mental health check-in for MUN students. No login, no judgment, no appointment needed.",
+    siteName: "MUN MIND",
+    type: "website",
+    locale: "en_CA",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MUN MIND — a private space to check in with yourself",
+    description:
+      "Anonymous mental health check-in for MUN students. No login, no judgment, no appointment needed.",
+  },
 };
 
 export default function RootLayout({

@@ -55,3 +55,5 @@ design-reference/
 # TypeScript
 *.tsbuildinfo
 # Note: next-env.d.ts IS committed per Next.js docs (don't gitignore it)
+
+.vercel
