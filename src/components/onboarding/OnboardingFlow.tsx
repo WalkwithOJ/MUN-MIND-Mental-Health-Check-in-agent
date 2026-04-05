@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Icon } from "@/components/ui";
 import copyJson from "@/config/copy.json";
@@ -9,7 +9,6 @@ import {
   type CampusId,
   getCampus,
   hasAcknowledgedPrivacy,
-  isReturnVisit,
   markVisited,
   setCampus,
   setPrivacyAcknowledged,
@@ -30,7 +29,6 @@ interface CopyFile {
     subheading: string;
     trustSignals: TrustSignal[];
     ctaPrimary: string;
-    returnVisitHeading: string;
   };
 }
 
@@ -45,20 +43,9 @@ const ICON_MAP: Record<string, string> = {
   university: "school",
 };
 
-const subscribeNoop = () => () => {};
-
-function useIsReturnVisit(): boolean {
-  return useSyncExternalStore(
-    subscribeNoop,
-    () => isReturnVisit(),
-    () => false
-  );
-}
-
 export function OnboardingFlow() {
   const router = useRouter();
   const [stage, setStage] = useState<Stage>("landing");
-  const isReturning = useIsReturnVisit();
   const campusHeadingRef = useRef<HTMLHeadingElement | null>(null);
 
   useEffect(() => {
@@ -104,7 +91,7 @@ export function OnboardingFlow() {
   return (
     <>
       <LandingHero
-        heading={isReturning ? copy.returnVisitHeading : copy.heading}
+        heading={copy.heading}
         subheading={copy.subheading}
         ctaLabel={copy.ctaPrimary}
         onStart={handleStartCheckIn}
