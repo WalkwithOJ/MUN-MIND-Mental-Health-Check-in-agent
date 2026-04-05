@@ -145,6 +145,14 @@ export interface CopyConfig {
   chat: {
     greeting: string;
     inputPlaceholder: string;
+    voice: {
+      startLabel: string;
+      stopLabel: string;
+      disclosureHeading: string;
+      disclosureBody: string;
+      disclosureAgree: string;
+      disclosureDecline: string;
+    };
     endSession: string;
     crisisResourcesLink: string;
     typingIndicator: string;

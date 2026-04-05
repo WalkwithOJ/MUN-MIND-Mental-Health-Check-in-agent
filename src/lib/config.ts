@@ -172,6 +172,14 @@ const copyConfigSchema = z.object({
   chat: z.object({
     greeting: z.string().min(1),
     inputPlaceholder: z.string().min(1),
+    voice: z.object({
+      startLabel: z.string().min(1),
+      stopLabel: z.string().min(1),
+      disclosureHeading: z.string().min(1),
+      disclosureBody: z.string().min(1),
+      disclosureAgree: z.string().min(1),
+      disclosureDecline: z.string().min(1),
+    }),
     endSession: z.string().min(1),
     crisisResourcesLink: z.string().min(1),
     typingIndicator: z.string(),

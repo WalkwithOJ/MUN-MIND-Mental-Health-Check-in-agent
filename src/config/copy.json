@@ -52,6 +52,14 @@
   "chat": {
     "greeting": "Hey. Welcome to MUN MIND. This is a private check-in — nothing here is saved or shared. How are you feeling today?",
     "inputPlaceholder": "Type your response...",
+    "voice": {
+      "startLabel": "Use voice input",
+      "stopLabel": "Stop listening",
+      "disclosureHeading": "About voice input",
+      "disclosureBody": "When you use voice input, your browser sends audio to its own speech service (Google on Chrome, Apple on Safari) to turn it into text. The text stays on your device until you send it. MUN MIND itself never hears your voice.",
+      "disclosureAgree": "Got it, use voice",
+      "disclosureDecline": "No thanks"
+    },
     "endSession": "End session",
     "crisisResourcesLink": "Crisis resources",
     "typingIndicator": "MUN MIND is thinking...",
