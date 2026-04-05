@@ -65,6 +65,13 @@
       { "score": 2, "label": "Low", "id": "mood_low" },
       { "score": 1, "label": "Struggling", "id": "mood_struggling" }
     ],
+    "moodAcknowledgments": {
+      "5": "That's wonderful to hear. What's been going on that's making today feel so good?",
+      "4": "Glad to hear you're doing well. Anything in particular on your mind?",
+      "3": "Okay is okay. Want to tell me more about how your day's been?",
+      "2": "Thanks for sharing that. I'm here if you want to talk about what's going on.",
+      "1": "I hear you. It takes something to say that out loud. What's weighing on you right now?"
+    },
     "quickReplies": [
       "Academic stress",
       "Loneliness",

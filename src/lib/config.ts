@@ -179,6 +179,13 @@ const copyConfigSchema = z.object({
     disclaimer: z.string().min(1),
     moodWidgetHeading: z.string().min(1),
     moodOptions: z.array(moodOptionSchema).length(5),
+    moodAcknowledgments: z.object({
+      "1": z.string().min(1),
+      "2": z.string().min(1),
+      "3": z.string().min(1),
+      "4": z.string().min(1),
+      "5": z.string().min(1),
+    }),
     quickReplies: z.array(z.string().min(1)).min(1),
   }),
   mood: z.object({

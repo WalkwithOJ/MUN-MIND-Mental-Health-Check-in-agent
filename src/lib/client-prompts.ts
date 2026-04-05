@@ -8,6 +8,7 @@
  * which is already public-safe information.
  */
 
+import copyJson from "@/config/copy.json";
 import promptsJson from "@/config/prompts.json";
 
 interface PromptsFile {
@@ -26,9 +27,18 @@ interface PromptsFile {
   };
 }
 
+interface CopyFile {
+  chat: {
+    moodAcknowledgments: Record<"1" | "2" | "3" | "4" | "5", string>;
+  };
+}
+
 const prompts = promptsJson as unknown as PromptsFile;
+const copy = copyJson as unknown as CopyFile;
 
 export const RED_TIER_REPLY = prompts.red_tier_response.reply;
 export const RED_TIER_CTA = prompts.red_tier_response.callToAction;
 export const CONVERSE_DEGRADED_REPLY = prompts.converse_degraded_response.reply;
 export const ASSESS_DEGRADED_REPLY = prompts.assess_degraded_response.reply;
+
+export const MOOD_ACKNOWLEDGMENTS = copy.chat.moodAcknowledgments;

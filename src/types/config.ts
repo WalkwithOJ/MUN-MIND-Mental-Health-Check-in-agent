@@ -152,6 +152,7 @@ export interface CopyConfig {
     disclaimer: string;
     moodWidgetHeading: string;
     moodOptions: MoodOption[];
+    moodAcknowledgments: Record<"1" | "2" | "3" | "4" | "5", string>;
     quickReplies: string[];
   };
   mood: {

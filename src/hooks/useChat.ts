@@ -11,6 +11,7 @@ import {
 import {
   ASSESS_DEGRADED_REPLY,
   CONVERSE_DEGRADED_REPLY,
+  MOOD_ACKNOWLEDGMENTS,
   RED_TIER_REPLY,
 } from "@/lib/client-prompts";
 
@@ -276,8 +277,11 @@ export function useChat({ campus }: UseChatOptions) {
   }
 
   /**
-   * Record a mood-widget selection. Fire-and-forget — a failed telemetry
-   * write must not block the conversation.
+   * Record a mood-widget selection. Adds the student's choice as a user
+   * message, immediately follows up with a warm canned acknowledgment (so the
+   * student isn't left staring at dead air), and fires telemetry in the
+   * background. The acknowledgment is deterministic (no LLM call) so it never
+   * depends on server health.
    */
   const selectMood = useCallback(
     async (moodScore: 1 | 2 | 3 | 4 | 5) => {
@@ -285,6 +289,14 @@ export function useChat({ campus }: UseChatOptions) {
       addMessage({
         role: "user",
         content: moodLabel(moodScore),
+      });
+      // Warm, deterministic acknowledgment keyed by mood score.
+      addMessage({
+        role: "bot",
+        content:
+          MOOD_ACKNOWLEDGMENTS[String(moodScore) as "1" | "2" | "3" | "4" | "5"],
+        tier: tierRef.current === "red" ? "red" : "yellow",
+        deterministic: true,
       });
       if (!sessionId) return;
       try {
