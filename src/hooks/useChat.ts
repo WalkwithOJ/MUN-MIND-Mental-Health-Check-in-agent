@@ -277,39 +277,83 @@ export function useChat({ campus }: UseChatOptions) {
   }
 
   /**
-   * Record a mood-widget selection. Adds the student's choice as a user
-   * message, immediately follows up with a warm canned acknowledgment (so the
-   * student isn't left staring at dead air), and fires telemetry in the
-   * background. The acknowledgment is deterministic (no LLM call) so it never
-   * depends on server health.
+   * Record a mood-widget selection.
+   *
+   * Flow:
+   *   1. Add the student's choice as a user bubble immediately (instant feedback)
+   *   2. Fire the anonymized telemetry write to /api/mood (background)
+   *   3. Call /api/converse with a mood-derived message to get a contextual
+   *      LLM acknowledgment that varies each time
+   *   4. If the LLM fails, fall back to the deterministic canned acknowledgment
+   *      from copy.json — student never sees dead air
    */
   const selectMood = useCallback(
     async (moodScore: 1 | 2 | 3 | 4 | 5) => {
       const sessionId = sessionIdRef.current;
-      addMessage({
-        role: "user",
-        content: moodLabel(moodScore),
-      });
-      // Warm, deterministic acknowledgment keyed by mood score.
-      addMessage({
-        role: "bot",
-        content:
-          MOOD_ACKNOWLEDGMENTS[String(moodScore) as "1" | "2" | "3" | "4" | "5"],
-        tier: tierRef.current === "red" ? "red" : "yellow",
-        deterministic: true,
-      });
-      if (!sessionId) return;
-      try {
-        await fetch("/api/mood", {
+      const label = moodLabel(moodScore);
+
+      addMessage({ role: "user", content: label });
+
+      // Fire telemetry in the background — don't await, don't block the reply
+      if (sessionId) {
+        void fetch("/api/mood", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ sessionId, moodScore }),
+        }).catch(() => {
+          // telemetry failure is a no-op
+        });
+      }
+
+      // Ask the LLM for a contextual acknowledgment via /api/converse.
+      // Falls back to the canned MOOD_ACKNOWLEDGMENTS if the LLM fails.
+      setPending(true);
+      try {
+        const sessionTier: SessionTier =
+          tierRef.current === "red" ? "yellow" : tierRef.current;
+        // Drop the user bubble we just added — the API treats `message`
+        // separately from `history`.
+        const historyWithoutNewMessage = messagesRef.current.slice(0, -1);
+        const history = buildHistoryForApi(historyWithoutNewMessage);
+        const moodInput = `I'm feeling ${label.toLowerCase()} right now.`;
+
+        const res = await fetch("/api/converse", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: moodInput,
+            history,
+            sessionTier,
+          }),
+        });
+        if (!res.ok) throw new Error(`converse failed: ${res.status}`);
+        const data = (await res.json()) as ConverseResponse;
+        const newTier: CrisisTier = mergeTier(tierRef.current, data.tier);
+        setTier(newTier);
+
+        addMessage({
+          role: "bot",
+          content: data.reply,
+          tier: newTier,
+          resources: filterByCampus(data.resources, campus),
+          deterministic: data.deterministic ?? data.degraded ?? false,
         });
       } catch {
-        // no-op: telemetry failure
+        // LLM failed — canned acknowledgment so the student isn't left hanging
+        addMessage({
+          role: "bot",
+          content:
+            MOOD_ACKNOWLEDGMENTS[
+              String(moodScore) as "1" | "2" | "3" | "4" | "5"
+            ],
+          tier: tierRef.current === "red" ? "red" : "yellow",
+          deterministic: true,
+        });
+      } finally {
+        setPending(false);
       }
     },
-    [addMessage]
+    [addMessage, campus, setTier]
   );
 
   return {
