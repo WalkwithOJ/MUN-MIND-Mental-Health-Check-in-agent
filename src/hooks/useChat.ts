@@ -80,10 +80,24 @@ function nextId(): string {
   return `msg_${Date.now()}_${idCounter}`;
 }
 
+export interface SessionSummaryData {
+  /** Most recent mood the student selected, or null if they never picked one. */
+  moodLabel: string | null;
+  moodScore: 1 | 2 | 3 | 4 | 5 | null;
+  /** Topic tags surfaced by the LLM (e.g. "academic stress", "sleep"). */
+  topicTags: string[];
+  /** Resources that were shared with the student during the session. */
+  resourcesShared: Resource[];
+  /** Final tier reached during the session. */
+  tier: CrisisTier;
+}
+
 export function useChat({ campus }: UseChatOptions) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [pending, setPending] = useState(false);
   const [tier, setTierState] = useState<CrisisTier>("green");
+  const [moodScore, setMoodScore] = useState<1 | 2 | 3 | 4 | 5 | null>(null);
+  const [topicTags, setTopicTags] = useState<string[]>([]);
   const sessionIdRef = useRef<string | null>(null);
   // Tracks whether the "first message" path has been consumed. Set true after
   // a successful /api/checkin OR after the client-side red path fires (which
@@ -196,6 +210,11 @@ export function useChat({ campus }: UseChatOptions) {
       // First message fully processed — subsequent messages go to /api/converse
       checkinDoneRef.current = true;
 
+      // Capture topic tags from the assess response for the session summary
+      if (data.topicTags && data.topicTags.length > 0) {
+        setTopicTags(data.topicTags);
+      }
+
       addMessage({
         role: "bot",
         content:
@@ -291,6 +310,7 @@ export function useChat({ campus }: UseChatOptions) {
     async (moodScore: 1 | 2 | 3 | 4 | 5) => {
       const sessionId = sessionIdRef.current;
       const label = moodLabel(moodScore);
+      setMoodScore(moodScore);
 
       addMessage({ role: "user", content: label });
 
@@ -356,6 +376,28 @@ export function useChat({ campus }: UseChatOptions) {
     [addMessage, campus, setTier]
   );
 
+  const sessionSummary = useMemo<SessionSummaryData>(() => {
+    // Dedupe resources shared across the session by id, preserving first-seen order
+    const seen = new Set<string>();
+    const resourcesShared: Resource[] = [];
+    for (const msg of messages) {
+      if (!msg.resources) continue;
+      for (const r of msg.resources) {
+        if (!seen.has(r.id)) {
+          seen.add(r.id);
+          resourcesShared.push(r);
+        }
+      }
+    }
+    return {
+      moodLabel: moodScore !== null ? moodLabel(moodScore) : null,
+      moodScore,
+      topicTags,
+      resourcesShared,
+      tier,
+    };
+  }, [messages, moodScore, topicTags, tier]);
+
   return {
     messages,
     tier,
@@ -363,6 +405,7 @@ export function useChat({ campus }: UseChatOptions) {
     sendMessage,
     selectMood,
     crisisResources,
+    sessionSummary,
   };
 }
 

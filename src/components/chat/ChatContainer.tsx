@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 
 import { useChat } from "@/hooks/useChat";
+import { useIdleTimer } from "@/hooks/useIdleTimer";
 
 import copyJson from "@/config/copy.json";
 import {
@@ -15,11 +16,17 @@ import {
 import { ChatInput } from "./ChatInput";
 import { CrisisBanner } from "./CrisisBanner";
 import { MessageList } from "./MessageList";
+import { SessionSummaryModal } from "./SessionSummaryModal";
+import { SessionTimeoutModal } from "./SessionTimeoutModal";
+
+// 30 minutes — gentle nudge for students who walked away mid-conversation.
+const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 
 interface CopyFile {
   chat: {
     greeting: string;
     disclaimer: string;
+    endSession: string;
   };
 }
 
@@ -107,18 +114,59 @@ export function ChatContainer() {
 }
 
 function ChatUI({ campus }: { campus: CampusId }) {
-  const { messages, tier, pending, sendMessage, selectMood, crisisResources } =
-    useChat({ campus });
+  const router = useRouter();
+  const {
+    messages,
+    tier,
+    pending,
+    sendMessage,
+    selectMood,
+    crisisResources,
+    sessionSummary,
+  } = useChat({ campus });
+  const [showSummary, setShowSummary] = useState(false);
+  const [showTimeout, setShowTimeout] = useState(false);
+
+  // Idle nudge — pause while a modal is open so the nudge doesn't fire
+  // while the student is reading the summary they just opened.
+  useIdleTimer({
+    timeoutMs: IDLE_TIMEOUT_MS,
+    onIdle: () => setShowTimeout(true),
+    paused: showSummary || showTimeout,
+  });
+
+  function handleEndSession() {
+    setShowSummary(true);
+  }
+
+  function handleCloseSession() {
+    // Navigate home. In-memory chat state is discarded by unmount; onboarding
+    // state stays in sessionStorage so a follow-up check-in in the same tab
+    // skips the privacy + campus gates.
+    setShowSummary(false);
+    router.push("/");
+  }
+
+  function handleContinueSession() {
+    setShowSummary(false);
+  }
 
   return (
     <div className="flex-1 flex flex-col">
       {tier === "red" && <CrisisBanner resources={crisisResources} />}
 
-      {/* Persistent micro-disclaimer above the chat */}
-      <div className="max-w-[720px] w-full mx-auto px-4 pt-4">
-        <p className="text-[11px] leading-4 text-[var(--color-text-muted)] text-center">
+      {/* Chat header row — back link + end session */}
+      <div className="max-w-[720px] w-full mx-auto px-4 pt-4 flex items-center justify-between">
+        <p className="text-[11px] leading-4 text-[var(--color-text-muted)]">
           {copy.disclaimer}
         </p>
+        <button
+          type="button"
+          onClick={handleEndSession}
+          className="text-[12px] font-semibold text-[var(--color-primary)] underline hover:text-[var(--color-primary-container)] transition-colors min-h-[32px] px-2"
+        >
+          {copy.endSession}
+        </button>
       </div>
 
       {/* Bot greeting card (always visible above the message list) */}
@@ -143,6 +191,17 @@ function ChatUI({ campus }: { campus: CampusId }) {
           <ChatInput onSend={sendMessage} disabled={pending} />
         </div>
       </div>
+
+      <SessionTimeoutModal
+        open={showTimeout}
+        onContinue={() => setShowTimeout(false)}
+      />
+      <SessionSummaryModal
+        open={showSummary}
+        summary={sessionSummary}
+        onContinue={handleContinueSession}
+        onClose={handleCloseSession}
+      />
     </div>
   );
 }
