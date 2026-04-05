@@ -5,6 +5,7 @@ import { useCallback, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import copyJson from "@/config/copy.json";
 import { VoiceButton } from "@/components/chat/VoiceButton";
+import { useIsTouchDevice } from "@/hooks/useIsTouchDevice";
 
 interface CopyFile {
   chat: {
@@ -20,8 +21,14 @@ interface ChatInputProps {
 }
 
 /**
- * Chat input — auto-grows up to a cap, Enter to send, Shift+Enter for newline.
- * Disabled while a send is in flight.
+ * Chat input — auto-grows up to a cap, disabled while a send is in flight.
+ *
+ * Enter behavior is platform-aware:
+ *   - Desktop (fine pointer): Enter sends, Shift+Enter inserts a newline
+ *   - Mobile/touch (coarse pointer): Enter always inserts a newline; the
+ *     student must tap the send button. This matches how every major mobile
+ *     messaging app works and fixes the footgun where the phone's Return key
+ *     fires the message mid-sentence.
  *
  * Voice input: the mic button streams interim transcripts into the textarea
  * so the student can review/edit before sending. Nothing is auto-sent.
@@ -29,6 +36,7 @@ interface ChatInputProps {
 export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isTouch = useIsTouchDevice();
   // Base text already in the textarea when voice started — interim results
   // are appended to this so manual typing before a dictation isn't clobbered.
   const voiceBaseRef = useRef<string>("");
@@ -54,6 +62,10 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    // On touch devices the Return key inserts a newline (native textarea
+    // behavior). The send button is the only way to send a message, matching
+    // expectations from every mobile messaging app.
+    if (isTouch) return;
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
