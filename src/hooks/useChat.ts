@@ -50,6 +50,25 @@ export type SessionTier = Exclude<CrisisTier, "red">;
 export const MAX_TURNS_IN_MEMORY = 3;
 export const MAX_MESSAGES_IN_MEMORY = MAX_TURNS_IN_MEMORY * 2;
 
+/**
+ * Filter a server-returned resource list by the student's campus. This is the
+ * ONLY place campus is applied to the resources, because campus lives only in
+ * client-side sessionStorage (never transmitted to the server).
+ *
+ * If the server returned an empty array (green tier, mid-conversation turns),
+ * return an empty array — do NOT fall through to a local computation. The
+ * server's empty array is an explicit "no resources for this turn" signal.
+ */
+function filterByCampus(
+  list: Resource[] | undefined,
+  campus: CampusId
+): Resource[] {
+  if (!list || list.length === 0) return [];
+  return list.filter(
+    (r) => r.campuses.includes(campus) || r.campuses.includes("any")
+  );
+}
+
 interface UseChatOptions {
   campus: CampusId;
 }
@@ -182,7 +201,11 @@ export function useChat({ campus }: UseChatOptions) {
           data.reply ??
           (data.degraded ? ASSESS_DEGRADED_REPLY : "I hear you."),
         tier: newTier,
-        resources: getResourcesForTier(newTier, campus),
+        // Trust the server's decision about whether to surface resources on
+        // this turn. Server returns [] for green tier (student is fine) and
+        // for mid-conversation turns (don't re-pitch). Client only filters
+        // by campus since the server doesn't have that context.
+        resources: filterByCampus(data.resources, campus),
         deterministic: data.deterministic ?? false,
       });
 
@@ -234,7 +257,9 @@ export function useChat({ campus }: UseChatOptions) {
         role: "bot",
         content: data.reply,
         tier: newTier,
-        resources: getResourcesForTier(newTier, campus),
+        // Trust the server — /api/converse always returns [] for non-crisis
+        // turns so we don't re-pitch resources on every follow-up.
+        resources: filterByCampus(data.resources, campus),
         deterministic: data.deterministic ?? data.degraded ?? false,
       });
     } catch {
